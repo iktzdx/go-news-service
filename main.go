@@ -25,6 +25,11 @@ type health struct {
 	Message []string `json:"msg"`
 }
 
+type errWebAPI struct {
+	Code    string `json:"code"`
+	Message string `json:"msg"`
+}
+
 func main() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -62,6 +67,31 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+
+		if _, err = w.Write(b); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
+		}
+	})
+
+	r.HandleFunc("/post/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+
+		resp := errWebAPI{
+			Code:    "001",
+			Message: "no post with id " + id,
+		}
+
+		b, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
 
 		if _, err = w.Write(b); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
