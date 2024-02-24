@@ -1,6 +1,6 @@
 test: build_test
 	docker-compose up -d
-	docker-compose exec -T http go test ./...
+	docker-compose exec -T http go test -v ./...
 	docker-compose down --rmi all --volumes
 
 unit_test:
