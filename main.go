@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/golang-migrate/migrate"
@@ -16,8 +17,9 @@ import (
 )
 
 const (
-	ReadTimeout  int = 5
-	WriteTimeout int = 5
+	ReadTimeout    int = 5
+	WriteTimeout   int = 5
+	MigrationSteps int = 4
 )
 
 type health struct {
@@ -30,13 +32,23 @@ type errWebAPI struct {
 	Message string `json:"msg"`
 }
 
-func main() {
+type Post struct {
+	ID        int    `json:"id"`
+	AuthorID  int    `json:"authorId"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	CreatedAt int    `json:"createdAt"`
+}
+
+func main() { //nolint:funlen,cyclop
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalf("open database: %s", err.Error())
 	}
 
-	pgDriver, err := postgres.WithInstance(db, &postgres.Config{})
+	var cfg postgres.Config
+
+	pgDriver, err := postgres.WithInstance(db, &cfg)
 	if err != nil {
 		log.Fatalf("create postgresql driver: %s", err.Error())
 	}
@@ -46,7 +58,7 @@ func main() {
 		log.Fatalf("make migrations engine: %s", err.Error())
 	}
 
-	if err = m.Steps(4); err != nil {
+	if err = m.Steps(MigrationSteps); err != nil {
 		log.Fatalf("migrate up: %s", err.Error())
 	}
 
@@ -78,12 +90,43 @@ func main() {
 	r.HandleFunc("/post/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 
-		resp := errWebAPI{
-			Code:    "001",
-			Message: "no post with id " + id,
+		postID, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
 		}
 
-		b, err := json.Marshal(resp)
+		query := "SELECT * FROM posts WHERE id = $1"
+		row := db.QueryRow(query, postID)
+
+		var post Post
+		if err := row.Scan(&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.CreatedAt); err != nil {
+			errPostNotFound := errWebAPI{
+				Code:    "001",
+				Message: "no post with id " + id,
+			}
+
+			body, err := json.Marshal(errPostNotFound)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+
+			if _, err = w.Write(body); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return
+			}
+
+			return
+		}
+
+		body, err := json.Marshal(post)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -91,9 +134,9 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusOK)
 
-		if _, err = w.Write(b); err != nil {
+		if _, err = w.Write(body); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
 			return
