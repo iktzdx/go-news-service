@@ -6,6 +6,8 @@ services:
     image: service_test
     environment:
       DATABASE_URL: "postgres://tester:testing@db:5432/gonews?sslmode=disable"
+    networks:
+      - gonews
     ports:
       - "8080:8080"
     depends_on:
@@ -14,9 +16,15 @@ services:
 
   db:
     image: postgres:latest
+    networks:
+      - gonews
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: tester
       POSTGRES_PASSWORD: testing
       POSTGRES_DB: gonews
+
+networks:
+  gonews:
+    driver: bridge

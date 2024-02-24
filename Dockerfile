@@ -14,8 +14,6 @@ RUN apt install -y postgresql-client
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /http-service
 
-# CMD /http-service
-
 # Run the tests in the container
 FROM build-stage as test
 

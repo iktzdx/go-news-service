@@ -1,12 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/postgres"
+	_ "github.com/golang-migrate/migrate/source/file"
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
 
 const (
@@ -20,6 +26,25 @@ type health struct {
 }
 
 func main() {
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatalf("open database: %s", err.Error())
+	}
+
+	pgDriver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		log.Fatalf("create postgresql driver: %s", err.Error())
+	}
+
+	m, err := migrate.NewWithDatabaseInstance("file://migrations/postgresql", "postgres", pgDriver)
+	if err != nil {
+		log.Fatalf("make migrations engine: %s", err.Error())
+	}
+
+	if err = m.Steps(4); err != nil {
+		log.Fatalf("migrate up: %s", err.Error())
+	}
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
@@ -53,6 +78,6 @@ func main() {
 	}
 
 	if err := s.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("listen on %s: %s", s.Addr, err.Error())
 	}
 }
