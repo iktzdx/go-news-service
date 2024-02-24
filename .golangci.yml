@@ -5,6 +5,7 @@ run:
   build-tags:
     - mock
     - integration
+    - e2e
 linters:
   enable-all: true
   disable:
