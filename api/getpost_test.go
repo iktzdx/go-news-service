@@ -91,3 +91,28 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
 	s.Equal(http.StatusOK, resp.Code)
 	s.JSONEq(expectedBody, string(body))
 }
+
+func (s *GetPostSuite) TestGetPostReturnsUnexpectedErr() {
+	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil)
+	s.Require().NoError(err, "make new get request")
+
+	req = mux.SetURLVars(req, map[string]string{"id": "12345"})
+
+	resp := httptest.NewRecorder()
+
+	var post api.Post
+
+	r := new(MockPostRetriever)
+	r.On("GetPost", 12345).Return(post, api.ErrUnexpected)
+
+	h := api.NewGetPostHandler(r)
+	h.ServeHTTP(resp, req)
+
+	body, err := io.ReadAll(resp.Body)
+	s.Require().NoError(err, "read response body")
+
+	s.Equal(http.StatusInternalServerError, resp.Code)
+
+	expectedBody := `{"code": "002", "msg": "unexpected error attempting to get post"}`
+	s.JSONEq(expectedBody, string(body))
+}

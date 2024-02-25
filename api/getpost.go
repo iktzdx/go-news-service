@@ -13,7 +13,10 @@ type PostRetriever interface {
 	GetPost(id int) (Post, error)
 }
 
-var ErrPostNotFound = errors.New("post not found")
+var (
+	ErrPostNotFound = errors.New("post not found")
+	ErrUnexpected   = errors.New("unexpected error")
+)
 
 type Post struct {
 	ID        int    `json:"id"`
@@ -44,33 +47,27 @@ func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	post, err := h.r.GetPost(postID)
 	if err != nil {
-		errPostNotFound := errWebAPI{
-			Code:    "001",
-			Message: "no post with id " + v,
-		}
+		var status int
 
-		body, err := json.Marshal(errPostNotFound)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		var errMsg errWebAPI
 
-			return
+		switch {
+		case errors.Is(err, ErrPostNotFound):
+			status = http.StatusNotFound
+			errMsg = errWebAPI{Code: "001", Message: "no post with id " + v}
+		default:
+			status = http.StatusInternalServerError
+			errMsg = errWebAPI{"002", "unexpected error attempting to get post"}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(status)
 
-		if _, err = w.Write(body); err != nil {
+		if err := json.NewEncoder(w).Encode(errMsg); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
 			return
 		}
-
-		return
-	}
-
-	body, err := json.Marshal(post)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
 	}
@@ -78,7 +75,7 @@ func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	if _, err = w.Write(body); err != nil {
+	if err := json.NewEncoder(w).Encode(post); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
