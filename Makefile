@@ -1,35 +1,40 @@
-test: down build_test up e2e_test down
+test: build_test up
+	@-make -s e2e_test || (make -s down; exit 1)
+	@make -s down
 
-clean_test: clean build_test_nocache up e2e_test clean
+clean_test: build_test_nocache up
+	@-make -s e2e_test || (make -s clean; exit 1)
+	@make -s clean
 
 e2e_test:
-	docker-compose exec -T http go test -tags=e2e -v ./...
+	docker-compose -f ./build/docker-compose.yaml exec -T http go test -tags=e2e -v ./...
 
 build_test:
-	docker build . -t service_test -q --target=test
+	docker build -t service_test -q --target=test -f ./build/Dockerfile .
 
 build_test_nocache:
-	docker build . -t service_test -q --no-cache --target=test
+	docker build -t service_test -q --no-cache --target=test -f ./build/Dockerfile .
 
 down_nocache:
-	docker-compose down --rmi all --volumes
+	docker-compose -f ./build/docker-compose.yaml down --rmi all --volumes
 
 clean: down_nocache
-	[[ -z `docker ps -a -q` ]] || docker rm `docker ps -a -q`
-	[[ -z `docker images --filter "dangling=true" -q --no-trunc` ]] \
-		|| docker rmi `docker images --filter "dangling=true" -q --no-trunc`
+	@CONTAINERS=$$(docker ps -a -q); \
+	[[ -z $$CONTAINERS ]] || docker rm $$CONTAINERS
+	@IMAGES=$$(docker images --filter "dangling=true" -q --no-trunc); \
+	[[ -z $$IMAGES ]] || docker rmi $$IMAGES
 
 unit_test:
 	go test `go list ./... | grep -v test`
 
 build:
-	docker build . -t service
+	docker build -t service ./build/Dockerfile .
 
 run:
 	docker run --publish 8080:8080 service
 
 up:
-	docker-compose up -d
+	docker-compose -f ./build/docker-compose.yaml up -d
 
 down:
-	docker-compose down
+	docker-compose -f ./build/docker-compose.yaml down

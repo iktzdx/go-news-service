@@ -12,7 +12,6 @@ services:
       - "8080:8080"
     depends_on:
       - db
-    entrypoint: "build/entrypoint.sh"
 
   db:
     image: postgres:latest
