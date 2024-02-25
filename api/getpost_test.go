@@ -20,6 +20,16 @@ func TestGetPostSuite(t *testing.T) {
 	suite.Run(t, new(GetPostSuite))
 }
 
+type MockPostRetriever struct {
+	mock.Mock
+}
+
+func (m *MockPostRetriever) GetPost(id int) (api.Post, error) {
+	args := m.Called(id)
+
+	return args.Get(0).(api.Post), args.Error(1)
+}
+
 func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
 	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil)
 	s.Require().NoError(err, "make new get request")
@@ -31,10 +41,9 @@ func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
 	var post api.Post
 
 	r := new(MockPostRetriever)
-	r.On("getPost", "12345").Return(post, api.ErrPostNotFound)
+	r.On("GetPost", 12345).Return(post, api.ErrPostNotFound)
 
 	h := api.NewGetPostHandler(r)
-
 	h.ServeHTTP(resp, req)
 
 	body, err := io.ReadAll(resp.Body)
@@ -46,12 +55,39 @@ func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
 	s.JSONEq(expectedBody, string(body))
 }
 
-type MockPostRetriever struct {
-	mock.Mock
-}
+func (s *GetPostSuite) TestGetPostThatDoesExist() {
+	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil)
+	s.Require().NoError(err, "make new get request")
 
-func (m *MockPostRetriever) GetPost(id int) (api.Post, error) {
-	args := m.Called(id)
+	req = mux.SetURLVars(req, map[string]string{"id": "12345"})
 
-	return args.Get(0).(api.Post), args.Error(1)
+	resp := httptest.NewRecorder()
+
+	post := api.Post{
+		ID:        12345,
+		AuthorID:  0,
+		Title:     "The Future of Sustainable Energy",
+		Content:   "The global pursuit of renewable energy sources continues to gain momentum.",
+		CreatedAt: 0,
+	}
+
+	r := new(MockPostRetriever)
+	r.On("GetPost", 12345).Return(post, nil)
+
+	h := api.NewGetPostHandler(r)
+	h.ServeHTTP(resp, req)
+
+	body, err := io.ReadAll(resp.Body)
+	s.Require().NoError(err, "read response body")
+
+	expectedBody := `{
+        "id": 12345,
+        "authorId": 0,
+        "title": "The Future of Sustainable Energy",
+        "content": "The global pursuit of renewable energy sources continues to gain momentum.",
+        "createdAt": 0
+    }`
+
+	s.Equal(http.StatusOK, resp.Code)
+	s.JSONEq(expectedBody, string(body))
 }

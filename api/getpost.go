@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -27,17 +28,47 @@ type errWebAPI struct {
 	Message string `json:"msg"`
 }
 
-type GetPosthandler struct{}
+type GetPosthandler struct {
+	r PostRetriever
+}
 
 func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	postID := mux.Vars(r)["id"]
+	v := mux.Vars(r)["id"]
 
-	errPostNotFound := errWebAPI{
-		Code:    "001",
-		Message: "no post with id " + postID,
+	postID, err := strconv.Atoi(v)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		return
 	}
 
-	body, err := json.Marshal(errPostNotFound)
+	post, err := h.r.GetPost(postID)
+	if err != nil {
+		errPostNotFound := errWebAPI{
+			Code:    "001",
+			Message: "no post with id " + v,
+		}
+
+		body, err := json.Marshal(errPostNotFound)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+
+		if _, err = w.Write(body); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
+		}
+
+		return
+	}
+
+	body, err := json.Marshal(post)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -45,7 +76,7 @@ func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusOK)
 
 	if _, err = w.Write(body); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -55,5 +86,5 @@ func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewGetPostHandler(r PostRetriever) *GetPosthandler {
-	return new(GetPosthandler)
+	return &GetPosthandler{r}
 }

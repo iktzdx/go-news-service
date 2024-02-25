@@ -92,7 +92,7 @@ func main() { //nolint:funlen,cyclop
 
 		postID, err := strconv.Atoi(id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 
 			return
 		}
