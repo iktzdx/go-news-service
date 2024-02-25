@@ -1,11 +1,13 @@
 package api_test
 
 import (
+	"context"
+	"encoding/json"
 	"gonews/api"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
@@ -14,6 +16,10 @@ import (
 
 type GetPostSuite struct {
 	suite.Suite
+	req  *http.Request
+	resp *httptest.ResponseRecorder
+	r    *MockPostRetriever
+	h    *api.GetPostHandler
 }
 
 func TestGetPostSuite(t *testing.T) {
@@ -30,39 +36,36 @@ func (m *MockPostRetriever) GetPost(id int) (api.Post, error) {
 	return args.Get(0).(api.Post), args.Error(1)
 }
 
-func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
-	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil)
+func (s *GetPostSuite) SetupTest() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "/post/12345", nil)
 	s.Require().NoError(err, "make new get request")
 
-	req = mux.SetURLVars(req, map[string]string{"id": "12345"})
+	s.req = mux.SetURLVars(req, map[string]string{"id": "12345"})
 
-	resp := httptest.NewRecorder()
+	s.resp = httptest.NewRecorder()
 
+	s.r = new(MockPostRetriever)
+	s.h = api.NewGetPostHandler(s.r)
+}
+
+func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
 	var post api.Post
 
-	r := new(MockPostRetriever)
-	r.On("GetPost", 12345).Return(post, api.ErrPostNotFound)
+	s.r.On("GetPost", 12345).Return(post, api.ErrPostNotFound)
+	s.h.ServeHTTP(s.resp, s.req)
+	s.Equal(http.StatusNotFound, s.resp.Code)
 
-	h := api.NewGetPostHandler(r)
-	h.ServeHTTP(resp, req)
-
-	body, err := io.ReadAll(resp.Body)
-	s.Require().NoError(err, "read response body")
-
-	s.Equal(http.StatusNotFound, resp.Code)
-
-	expectedBody := `{"code": "001", "msg": "no post with id 12345"}`
-	s.JSONEq(expectedBody, string(body))
+	var errMsg api.WebAPIError
+	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
+	s.Require().NoError(err, "decode web API error message")
+	s.Equal("001", errMsg.Code)
+	s.Equal("no post with id 12345", errMsg.Message)
 }
 
 func (s *GetPostSuite) TestGetPostThatDoesExist() {
-	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil)
-	s.Require().NoError(err, "make new get request")
-
-	req = mux.SetURLVars(req, map[string]string{"id": "12345"})
-
-	resp := httptest.NewRecorder()
-
 	post := api.Post{
 		ID:        12345,
 		AuthorID:  0,
@@ -71,14 +74,10 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
 		CreatedAt: 0,
 	}
 
-	r := new(MockPostRetriever)
-	r.On("GetPost", 12345).Return(post, nil)
+	s.r.On("GetPost", 12345).Return(post, nil)
 
-	h := api.NewGetPostHandler(r)
-	h.ServeHTTP(resp, req)
-
-	body, err := io.ReadAll(resp.Body)
-	s.Require().NoError(err, "read response body")
+	s.h.ServeHTTP(s.resp, s.req)
+	s.Equal(http.StatusOK, s.resp.Code)
 
 	expectedBody := `{
         "id": 12345,
@@ -88,31 +87,21 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
         "createdAt": 0
     }`
 
-	s.Equal(http.StatusOK, resp.Code)
-	s.JSONEq(expectedBody, string(body))
+	s.JSONEq(expectedBody, s.resp.Body.String())
 }
 
 func (s *GetPostSuite) TestGetPostReturnsUnexpectedErr() {
-	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil)
-	s.Require().NoError(err, "make new get request")
-
-	req = mux.SetURLVars(req, map[string]string{"id": "12345"})
-
-	resp := httptest.NewRecorder()
-
 	var post api.Post
 
-	r := new(MockPostRetriever)
-	r.On("GetPost", 12345).Return(post, api.ErrUnexpected)
+	s.r.On("GetPost", 12345).Return(post, api.ErrUnexpected)
 
-	h := api.NewGetPostHandler(r)
-	h.ServeHTTP(resp, req)
+	s.h.ServeHTTP(s.resp, s.req)
 
-	body, err := io.ReadAll(resp.Body)
-	s.Require().NoError(err, "read response body")
+	s.Equal(http.StatusInternalServerError, s.resp.Code)
 
-	s.Equal(http.StatusInternalServerError, resp.Code)
-
-	expectedBody := `{"code": "002", "msg": "unexpected error attempting to get post"}`
-	s.JSONEq(expectedBody, string(body))
+	var errMsg api.WebAPIError
+	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
+	s.Require().NoError(err, "decode web API error message")
+	s.Equal("002", errMsg.Code)
+	s.Equal("unexpected error attempting to get post", errMsg.Message)
 }

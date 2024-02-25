@@ -26,16 +26,16 @@ type Post struct {
 	CreatedAt int    `json:"createdAt"`
 }
 
-type errWebAPI struct {
+type WebAPIError struct {
 	Code    string `json:"code"`
 	Message string `json:"msg"`
 }
 
-type GetPosthandler struct {
+type GetPostHandler struct {
 	r PostRetriever
 }
 
-func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	v := mux.Vars(r)["id"]
 
 	postID, err := strconv.Atoi(v)
@@ -49,15 +49,15 @@ func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var status int
 
-		var errMsg errWebAPI
+		var errMsg WebAPIError
 
 		switch {
 		case errors.Is(err, ErrPostNotFound):
 			status = http.StatusNotFound
-			errMsg = errWebAPI{Code: "001", Message: "no post with id " + v}
+			errMsg = WebAPIError{Code: "001", Message: "no post with id " + v}
 		default:
 			status = http.StatusInternalServerError
-			errMsg = errWebAPI{"002", "unexpected error attempting to get post"}
+			errMsg = WebAPIError{"002", "unexpected error attempting to get post"}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -82,6 +82,6 @@ func (h *GetPosthandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewGetPostHandler(r PostRetriever) *GetPosthandler {
-	return &GetPosthandler{r}
+func NewGetPostHandler(r PostRetriever) *GetPostHandler {
+	return &GetPostHandler{r}
 }
