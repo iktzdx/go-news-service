@@ -1,13 +1,13 @@
 test: build_test up
-	@-make -s e2e_test || (make -s down; exit 1)
+	@-make -s test_all || (make -s down; exit 1)
 	@make -s down
 
 clean_test: build_test_nocache up
-	@-make -s e2e_test || (make -s clean; exit 1)
+	@-make -s test_all || (make -s clean; exit 1)
 	@make -s clean
 
-e2e_test:
-	docker-compose -f ./build/docker-compose.yaml exec -T http go test -tags=e2e -v ./...
+test_all:
+	docker-compose -f ./build/docker-compose.yaml exec -T http go test -v ./...
 
 build_test:
 	docker build -t service_test -q --target=test -f ./build/Dockerfile .

@@ -35,7 +35,7 @@ type GetPostHandler struct {
 	r PostRetriever
 }
 
-func (h *GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	v := mux.Vars(r)["id"]
 
 	postID, err := strconv.Atoi(v)
@@ -82,6 +82,6 @@ func (h *GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewGetPostHandler(r PostRetriever) *GetPostHandler {
-	return &GetPostHandler{r}
+func NewGetPostHandler(r PostRetriever) GetPostHandler {
+	return GetPostHandler{r}
 }

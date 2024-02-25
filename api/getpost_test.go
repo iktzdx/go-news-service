@@ -19,7 +19,7 @@ type GetPostSuite struct {
 	req  *http.Request
 	resp *httptest.ResponseRecorder
 	r    *MockPostRetriever
-	h    *api.GetPostHandler
+	h    api.GetPostHandler
 }
 
 func TestGetPostSuite(t *testing.T) {

@@ -3,10 +3,11 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"gonews/api"
+	"gonews/post"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/golang-migrate/migrate"
@@ -27,11 +28,6 @@ type health struct {
 	Message []string `json:"msg"`
 }
 
-type errWebAPI struct {
-	Code    string `json:"code"`
-	Message string `json:"msg"`
-}
-
 type Post struct {
 	ID        int    `json:"id"`
 	AuthorID  int    `json:"authorId"`
@@ -40,7 +36,7 @@ type Post struct {
 	CreatedAt int    `json:"createdAt"`
 }
 
-func main() { //nolint:funlen,cyclop
+func main() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalf("open database: %s", err.Error())
@@ -64,6 +60,9 @@ func main() { //nolint:funlen,cyclop
 
 	r := mux.NewRouter()
 
+	pr := post.NewPostRetriever(db)
+	r.Handle("/post/{id}", api.NewGetPostHandler(pr))
+
 	r.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		resp := health{
 			Status:  "ok",
@@ -81,62 +80,6 @@ func main() { //nolint:funlen,cyclop
 		w.WriteHeader(http.StatusOK)
 
 		if _, err = w.Write(b); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-	})
-
-	r.HandleFunc("/post/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
-
-		postID, err := strconv.Atoi(id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-
-			return
-		}
-
-		query := "SELECT * FROM posts WHERE id = $1"
-		row := db.QueryRow(query, postID)
-
-		var post Post
-		if err := row.Scan(&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.CreatedAt); err != nil {
-			errPostNotFound := errWebAPI{
-				Code:    "001",
-				Message: "no post with id " + id,
-			}
-
-			body, err := json.Marshal(errPostNotFound)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-
-				return
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusNotFound)
-
-			if _, err = w.Write(body); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-
-				return
-			}
-
-			return
-		}
-
-		body, err := json.Marshal(post)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		if _, err = w.Write(body); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
 			return
