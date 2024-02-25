@@ -25,7 +25,7 @@ clean: down_nocache
 	[[ -z $$IMAGES ]] || docker rmi $$IMAGES
 
 unit_test:
-	go test `go list ./... | grep -v test`
+	go test -v `go list ./... | grep -v test`
 
 build:
 	docker build -t service ./build/Dockerfile .
