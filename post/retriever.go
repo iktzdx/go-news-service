@@ -2,20 +2,26 @@ package post
 
 import (
 	"gonews/api"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
 
-type PostFinder interface {
+type PostsBoundaryRepoPort interface {
 	FindPostByID(id int) (api.Post, error)
 }
 
-type PostRetriever struct {
-	adapter PostFinder
+type PostsBoundaryPort struct {
+	repo PostsBoundaryRepoPort
 }
 
-func (r PostRetriever) GetPost(id int) (api.Post, error) {
-	post, err := r.adapter.FindPostByID(id)
+func (port PostsBoundaryPort) GetPost(id string) (api.Post, error) {
+	postID, err := strconv.Atoi(id)
+	if err != nil {
+		return api.Post{}, errors.Wrap(api.ErrInvalidPostID, "parse int")
+	}
+
+	post, err := port.repo.FindPostByID(postID)
 	if err != nil {
 		return api.Post{}, errors.Wrap(err, "get post")
 	}
@@ -23,6 +29,6 @@ func (r PostRetriever) GetPost(id int) (api.Post, error) {
 	return post, nil
 }
 
-func NewPostRetriever(adapter PostFinder) PostRetriever {
-	return PostRetriever{adapter}
+func NewPostsBoundaryPort(repo PostsBoundaryRepoPort) PostsBoundaryPort {
+	return PostsBoundaryPort{repo}
 }

@@ -1,7 +1,6 @@
 package post_test
 
 import (
-	"errors"
 	"gonews/api"
 	"gonews/post"
 	"testing"
@@ -10,43 +9,52 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var ErrUnexpected = errors.New("unexpected error")
-
-type PostRetrieverSuite struct {
+type FindPostByIDSuite struct {
 	suite.Suite
-	m    *MockPostRetriever
-	port post.PostRetriever
+	mockRepo *MockPostsBoundaryRepoPort
+	port     post.PostsBoundaryPort
 }
 
-func TestPostRetrieverSuite(t *testing.T) {
-	suite.Run(t, new(PostRetrieverSuite))
+func TestFindPostByIDSuite(t *testing.T) {
+	suite.Run(t, new(FindPostByIDSuite))
 }
 
-type MockPostRetriever struct {
+type MockPostsBoundaryRepoPort struct {
 	mock.Mock
 }
 
-func (m *MockPostRetriever) FindPostByID(id int) (api.Post, error) {
-	args := m.Called(id)
+func (mockRepo *MockPostsBoundaryRepoPort) FindPostByID(id int) (api.Post, error) {
+	args := mockRepo.Called(id)
 
-	return args.Get(0).(api.Post), args.Error(1)
+	return args.Get(0).(api.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
-func (s *PostRetrieverSuite) SetupTest() {
-	s.m = new(MockPostRetriever)
-	s.port = post.NewPostRetriever(s.m)
+func (s *FindPostByIDSuite) SetupTest() {
+	s.mockRepo = new(MockPostsBoundaryRepoPort)
+	s.port = post.NewPostsBoundaryPort(s.mockRepo)
 }
 
-func (s *PostRetrieverSuite) TestRetrieverFailed() {
-	var p api.Post
+func (s *FindPostByIDSuite) TestFinderFailed() {
+	var expected api.Post
 
-	s.m.On("FindPostByID", 12345).Return(p, ErrUnexpected)
+	s.mockRepo.On("FindPostByID", 12345).Return(expected, api.ErrUnexpected)
 
-	_, err := s.port.GetPost(12345)
-	s.Require().ErrorIs(err, ErrUnexpected)
+	got, err := s.port.GetPost("12345")
+	s.Require().ErrorIs(err, api.ErrUnexpected)
+	s.Equal(expected, got)
 }
 
-func (s *PostRetrieverSuite) TestRetrieverSuccess() {
+func (s *FindPostByIDSuite) TestInvalidPostID() {
+	var expected api.Post
+
+	s.mockRepo.On("FindPostByID", 12345).Return(expected, api.ErrInvalidPostID)
+
+	got, err := s.port.GetPost("12C45")
+	s.Require().ErrorIs(err, api.ErrInvalidPostID)
+	s.Equal(expected, got)
+}
+
+func (s *FindPostByIDSuite) TestFinderSucceeded() {
 	expected := api.Post{
 		ID:        12345,
 		AuthorID:  0,
@@ -55,9 +63,9 @@ func (s *PostRetrieverSuite) TestRetrieverSuccess() {
 		CreatedAt: 0,
 	}
 
-	s.m.On("FindPostByID", 12345).Return(expected, nil)
+	s.mockRepo.On("FindPostByID", 12345).Return(expected, nil)
 
-	got, err := s.port.GetPost(12345)
+	got, err := s.port.GetPost("12345")
 	s.Require().NoError(err)
 	s.Equal(expected, got)
 }

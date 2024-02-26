@@ -2,20 +2,21 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
-	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/gorilla/mux"
 )
 
-type PostRetriever interface {
-	GetPost(id int) (Post, error)
+type PostsBoundaryPort interface {
+	GetPost(id string) (Post, error)
 }
 
 var (
-	ErrPostNotFound = errors.New("post not found")
-	ErrUnexpected   = errors.New("unexpected error")
+	ErrPostNotFound  = errors.New("post not found")
+	ErrInvalidPostID = errors.New("invalid post id")
+	ErrUnexpected    = errors.New("unexpected error")
 )
 
 type Post struct {
@@ -31,31 +32,14 @@ type WebAPIError struct {
 	Message string `json:"msg"`
 }
 
-type GetPostHandler struct {
-	r PostRetriever
+type RESTPrimaryAdapter struct {
+	port PostsBoundaryPort
 }
 
-func (h GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	v := mux.Vars(r)["id"]
+func (h RESTPrimaryAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	postID := mux.Vars(r)["id"]
 
-	postID, err := strconv.Atoi(v)
-	if err != nil {
-		status := http.StatusBadRequest
-		errMsg := WebAPIError{Code: "003", Message: "invalid post id provided"}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
-
-		if err := json.NewEncoder(w).Encode(errMsg); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-
-		return
-	}
-
-	post, err := h.r.GetPost(postID)
+	post, err := h.port.GetPost(postID)
 	if err != nil {
 		var status int
 
@@ -64,7 +48,10 @@ func (h GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, ErrPostNotFound):
 			status = http.StatusNotFound
-			errMsg = WebAPIError{Code: "001", Message: "no post with id " + v}
+			errMsg = WebAPIError{Code: "001", Message: "no post with id " + postID}
+		case errors.Is(err, ErrInvalidPostID):
+			status = http.StatusBadRequest
+			errMsg = WebAPIError{Code: "003", Message: "invalid post id provided"}
 		default:
 			status = http.StatusInternalServerError
 			errMsg = WebAPIError{"002", "unexpected error attempting to get post"}
@@ -92,6 +79,6 @@ func (h GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewGetPostHandler(r PostRetriever) GetPostHandler {
-	return GetPostHandler{r}
+func NewRESTPrimaryAdapter(port PostsBoundaryPort) RESTPrimaryAdapter {
+	return RESTPrimaryAdapter{port}
 }

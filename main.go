@@ -12,18 +12,19 @@ import (
 
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/postgres"
-	_ "github.com/golang-migrate/migrate/source/file"
 	"github.com/gorilla/mux"
+
+	_ "github.com/golang-migrate/migrate/source/file"
 	_ "github.com/lib/pq"
 )
 
 const (
-	ReadTimeout    int = 5
-	WriteTimeout   int = 5
-	MigrationSteps int = 4
+	ReadTimeout    time.Duration = 5 * time.Second
+	WriteTimeout   time.Duration = 5 * time.Second
+	MigrationSteps int           = 4
 )
 
-type health struct {
+type healthCheckResponse struct {
 	Status  string   `json:"status"`
 	Message []string `json:"msg"`
 }
@@ -60,17 +61,16 @@ func main() {
 
 	r := mux.NewRouter()
 
-	dbRetriever := post.NewDBPostRetriever(db)
-	retriever := post.NewPostRetriever(dbRetriever)
-	r.Handle("/post/{id}", api.NewGetPostHandler(retriever))
+	repo := post.NewPGSQLSecondaryAdapter(db)
+	boundaryPort := post.NewPostsBoundaryPort(repo)
+
+	r.Handle("/post/{id}", api.NewRESTPrimaryAdapter(boundaryPort))
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		resp := health{
-			Status:  "ok",
+		resp, err := json.Marshal(healthCheckResponse{
+			Status:  "OK",
 			Message: []string{},
-		}
-
-		b, err := json.Marshal(resp)
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -80,7 +80,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		if _, err = w.Write(b); err != nil {
+		if _, err = w.Write(resp); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
 			return
@@ -90,8 +90,8 @@ func main() {
 	s := http.Server{ //nolint:exhaustruct
 		Addr:         ":8080",
 		Handler:      r,
-		ReadTimeout:  time.Duration(ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(ReadTimeout) * time.Second,
+		ReadTimeout:  ReadTimeout,
+		WriteTimeout: WriteTimeout,
 	}
 
 	if err := s.ListenAndServe(); err != nil {

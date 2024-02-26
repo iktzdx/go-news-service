@@ -1,13 +1,11 @@
 package api_test
 
 import (
-	"context"
 	"encoding/json"
 	"gonews/api"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
@@ -16,46 +14,43 @@ import (
 
 type GetPostSuite struct {
 	suite.Suite
-	req  *http.Request
-	resp *httptest.ResponseRecorder
-	r    *MockPostRetriever
-	h    api.GetPostHandler
+	req     *http.Request
+	resp    *httptest.ResponseRecorder
+	port    *MockPostsBoundaryPort
+	adapter api.RESTPrimaryAdapter
 }
 
 func TestGetPostSuite(t *testing.T) {
 	suite.Run(t, new(GetPostSuite))
 }
 
-type MockPostRetriever struct {
+type MockPostsBoundaryPort struct {
 	mock.Mock
 }
 
-func (m *MockPostRetriever) GetPost(id int) (api.Post, error) {
+func (m *MockPostsBoundaryPort) GetPost(id string) (api.Post, error) {
 	args := m.Called(id)
 
-	return args.Get(0).(api.Post), args.Error(1)
+	return args.Get(0).(api.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *GetPostSuite) SetupTest() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "/post/12345", nil)
+	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil) //nolint:noctx
 	s.Require().NoError(err, "make new get request")
 
 	s.req = mux.SetURLVars(req, map[string]string{"id": "12345"})
 
 	s.resp = httptest.NewRecorder()
 
-	s.r = new(MockPostRetriever)
-	s.h = api.NewGetPostHandler(s.r)
+	s.port = new(MockPostsBoundaryPort)
+	s.adapter = api.NewRESTPrimaryAdapter(s.port)
 }
 
 func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
 	var post api.Post
 
-	s.r.On("GetPost", 12345).Return(post, api.ErrPostNotFound)
-	s.h.ServeHTTP(s.resp, s.req)
+	s.port.On("GetPost", "12345").Return(post, api.ErrPostNotFound)
+	s.adapter.ServeHTTP(s.resp, s.req)
 	s.Equal(http.StatusNotFound, s.resp.Code)
 
 	var errMsg api.WebAPIError
@@ -74,9 +69,8 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
 		CreatedAt: 0,
 	}
 
-	s.r.On("GetPost", 12345).Return(post, nil)
-
-	s.h.ServeHTTP(s.resp, s.req)
+	s.port.On("GetPost", "12345").Return(post, nil)
+	s.adapter.ServeHTTP(s.resp, s.req)
 	s.Equal(http.StatusOK, s.resp.Code)
 
 	expectedBody := `{
@@ -90,13 +84,25 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
 	s.JSONEq(expectedBody, s.resp.Body.String())
 }
 
+func (s *GetPostSuite) TestGetPostWithInvalidID() {
+	var post api.Post
+
+	s.port.On("GetPost", "12345").Return(post, api.ErrInvalidPostID)
+	s.adapter.ServeHTTP(s.resp, s.req)
+	s.Equal(http.StatusBadRequest, s.resp.Code)
+
+	var errMsg api.WebAPIError
+	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
+	s.Require().NoError(err, "decode web API error message")
+	s.Equal("003", errMsg.Code)
+	s.Equal("invalid post id provided", errMsg.Message)
+}
+
 func (s *GetPostSuite) TestGetPostReturnsUnexpectedErr() {
 	var post api.Post
 
-	s.r.On("GetPost", 12345).Return(post, api.ErrUnexpected)
-
-	s.h.ServeHTTP(s.resp, s.req)
-
+	s.port.On("GetPost", "12345").Return(post, api.ErrUnexpected)
+	s.adapter.ServeHTTP(s.resp, s.req)
 	s.Equal(http.StatusInternalServerError, s.resp.Code)
 
 	var errMsg api.WebAPIError

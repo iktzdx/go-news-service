@@ -2,25 +2,26 @@ package post
 
 import (
 	"database/sql"
-	"errors"
 	"gonews/api"
+
+	"github.com/pkg/errors"
 
 	_ "github.com/lib/pq"
 )
 
-type DBPostRetriever struct {
+type PGSQLSecondaryAdapter struct {
 	db *sql.DB
 }
 
-func NewDBPostRetriever(db *sql.DB) DBPostRetriever {
-	return DBPostRetriever{db}
+func NewPGSQLSecondaryAdapter(db *sql.DB) PGSQLSecondaryAdapter {
+	return PGSQLSecondaryAdapter{db}
 }
 
-func (r DBPostRetriever) FindPostByID(id int) (api.Post, error) {
+func (adapter PGSQLSecondaryAdapter) FindPostByID(id int) (api.Post, error) {
 	var post api.Post
 
 	query := "SELECT * FROM posts WHERE id = $1"
-	row := r.db.QueryRow(query, id)
+	row := adapter.db.QueryRow(query, id)
 
 	if err := row.Scan(&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.CreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -11,45 +11,46 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type DBPostRetrieverSuite struct {
+type RepoFindPostByIDSuite struct {
 	suite.Suite
-	db *sql.DB
-	r  post.DBPostRetriever
+	db      *sql.DB
+	adapter post.PGSQLSecondaryAdapter
 }
 
-func TestDBPostRetrieverSuite(t *testing.T) {
-	suite.Run(t, new(DBPostRetrieverSuite))
+func TestRepoFindPostByIDSuite(t *testing.T) {
+	suite.Run(t, new(RepoFindPostByIDSuite))
 }
 
-func (s *DBPostRetrieverSuite) SetupTest() {
+func (s *RepoFindPostByIDSuite) SetupTest() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	s.Require().NoError(err, "open database connection")
 
 	s.db = db
-	s.r = post.NewDBPostRetriever(db)
+	s.adapter = post.NewPGSQLSecondaryAdapter(db)
 }
 
-func (s *DBPostRetrieverSuite) TearDownTest() {
+func (s *RepoFindPostByIDSuite) TearDownTest() {
 	err := s.db.Close()
 	s.Require().NoError(err, "close db connection")
 }
 
-func (s *DBPostRetrieverSuite) TestRetrievePostThatDoesNotExist() {
-	_, err := s.r.FindPostByID(12345)
+func (s *RepoFindPostByIDSuite) TestFindPostThatDoesNotExist() {
+	got, err := s.adapter.FindPostByID(12345)
 	s.Require().ErrorIs(err, api.ErrPostNotFound)
+	s.Zero(got)
 }
 
-func (s *DBPostRetrieverSuite) TestRetrievePostThatDoesExist() {
+func (s *RepoFindPostByIDSuite) TestFindPostThatDoesExist() {
 	_, err := s.db.Exec(
 		"INSERT INTO posts (id, author_id, title, content, created_at) VALUES ($1, $2, $3, $4, $5)",
 		42069, 0, "The Future of Sustainable Energy", "The global pursuit of renewable energy sources continues to gain momentum.", 0,
 	)
 	s.Require().NoError(err, "insert data")
 
-	retrieved, err := s.r.FindPostByID(42069)
+	got, err := s.adapter.FindPostByID(42069)
 	s.Require().NoError(err)
 
-	post := api.Post{
+	expected := api.Post{
 		ID:        42069,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -57,12 +58,13 @@ func (s *DBPostRetrieverSuite) TestRetrievePostThatDoesExist() {
 		CreatedAt: 0,
 	}
 
-	s.Equal(post, retrieved)
+	s.Equal(expected, got)
 }
 
-func (s *DBPostRetrieverSuite) TestRetrievePostUnexpectedError() {
+func (s *RepoFindPostByIDSuite) TestFindPostUnexpectedError() {
 	s.db.Close()
 
-	_, err := s.r.FindPostByID(12345)
+	got, err := s.adapter.FindPostByID(12345)
 	s.Require().ErrorIs(err, api.ErrUnexpected)
+	s.Zero(got)
 }
