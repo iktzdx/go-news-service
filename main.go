@@ -60,8 +60,9 @@ func main() {
 
 	r := mux.NewRouter()
 
-	pr := post.NewPostRetriever(db)
-	r.Handle("/post/{id}", api.NewGetPostHandler(pr))
+	dbRetriever := post.NewDBPostRetriever(db)
+	retriever := post.NewPostRetriever(dbRetriever)
+	r.Handle("/post/{id}", api.NewGetPostHandler(retriever))
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		resp := health{

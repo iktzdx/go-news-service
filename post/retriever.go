@@ -1,34 +1,28 @@
 package post
 
 import (
-	"database/sql"
-	"errors"
 	"gonews/api"
 
-	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 )
 
-type PostRetriever struct {
-	db *sql.DB
+type PostFinder interface {
+	FindPostByID(id int) (api.Post, error)
 }
 
-func NewPostRetriever(db *sql.DB) PostRetriever {
-	return PostRetriever{db}
+type PostRetriever struct {
+	adapter PostFinder
 }
 
 func (r PostRetriever) GetPost(id int) (api.Post, error) {
-	var post api.Post
-
-	query := "SELECT * FROM posts WHERE id = $1"
-	row := r.db.QueryRow(query, id)
-
-	if err := row.Scan(&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.CreatedAt); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return api.Post{}, api.ErrPostNotFound
-		}
-
-		return api.Post{}, api.ErrUnexpected
+	post, err := r.adapter.FindPostByID(id)
+	if err != nil {
+		return api.Post{}, errors.Wrap(err, "get post")
 	}
 
 	return post, nil
+}
+
+func NewPostRetriever(adapter PostFinder) PostRetriever {
+	return PostRetriever{adapter}
 }
