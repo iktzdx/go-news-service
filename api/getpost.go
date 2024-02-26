@@ -40,7 +40,17 @@ func (h GetPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	postID, err := strconv.Atoi(v)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		status := http.StatusBadRequest
+		errMsg := WebAPIError{Code: "003", Message: "invalid post id provided"}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+
+		if err := json.NewEncoder(w).Encode(errMsg); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
+		}
 
 		return
 	}

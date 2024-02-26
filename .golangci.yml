@@ -33,7 +33,7 @@ linters-settings:
     sections:
       - Standard
       - Default
-      - Prefix(skillfactory-go)
+      - Prefix(gonews)
   lll:
     line-length: 140
   depguard:

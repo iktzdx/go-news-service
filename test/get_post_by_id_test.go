@@ -1,13 +1,13 @@
 package e2e_test
 
 import (
-	"context"
 	"database/sql"
+	"encoding/json"
+	"gonews/api"
 	"io"
 	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
@@ -15,41 +15,36 @@ import (
 
 type GetPostByIDSuite struct {
 	suite.Suite
+	c *http.Client
 }
 
 func TestGetPostByIDSuite(t *testing.T) {
 	suite.Run(t, new(GetPostByIDSuite))
 }
 
+func (s *GetPostByIDSuite) SetupTest() {
+	s.c = http.DefaultClient
+}
+
 func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	c := http.DefaultClient
-
 	req, err := http.NewRequest(http.MethodGet, "http://127.0.0.1:8080/post/12345", nil)
 	s.Require().NoError(err)
 
-	req = req.WithContext(ctx)
-
-	r, err := c.Do(req)
+	resp, err := s.c.Do(req)
 	s.Require().NoError(err)
 
-	defer r.Body.Close()
+	defer resp.Body.Close()
 
-	b, err := io.ReadAll(r.Body)
-	s.Require().NoError(err)
+	s.Equal(http.StatusNotFound, resp.StatusCode)
 
-	expectedBody := `{"code": "001", "msg": "no post with id 12345"}`
-
-	s.Equal(http.StatusNotFound, r.StatusCode)
-	s.JSONEq(expectedBody, string(b))
+	var errMsg api.WebAPIError
+	err = json.NewDecoder(resp.Body).Decode(&errMsg)
+	s.Require().NoError(err, "decode web API error message")
+	s.Equal("001", errMsg.Code)
+	s.Equal("no post with id 12345", errMsg.Message)
 }
 
 func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	s.Require().NoError(err, "open database connection")
 
@@ -63,19 +58,15 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
 	s.Require().NoError(err, "get the number of rows affected")
 	s.Require().EqualValues(1, affected, "rows affected")
 
-	c := http.DefaultClient
-
-	req, err := http.NewRequest(http.MethodGet, "http://127.0.0.1:8080/post/54321", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://127.0.0.1:8080/post/54321", nil) //nolint:noctx
 	s.Require().NoError(err, "make get request")
 
-	req = req.WithContext(ctx)
-
-	r, err := c.Do(req)
+	resp, err := s.c.Do(req)
 	s.Require().NoError(err, "send get request")
 
-	defer r.Body.Close()
+	defer resp.Body.Close()
 
-	b, err := io.ReadAll(r.Body)
+	b, err := io.ReadAll(resp.Body)
 	s.Require().NoError(err, "read response body")
 
 	expectedBody := `{
@@ -86,6 +77,24 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
         "createdAt": 0
     }`
 
-	s.Equal(http.StatusOK, r.StatusCode)
+	s.Equal(http.StatusOK, resp.StatusCode)
 	s.JSONEq(expectedBody, string(b))
+}
+
+func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
+	req, err := http.NewRequest(http.MethodGet, "http://127.0.0.1:8080/post/12C45", nil) //nolint:noctx
+	s.Require().NoError(err)
+
+	resp, err := s.c.Do(req)
+	s.Require().NoError(err)
+
+	defer resp.Body.Close()
+
+	s.Equal(http.StatusBadRequest, resp.StatusCode)
+
+	var errMsg api.WebAPIError
+	err = json.NewDecoder(resp.Body).Decode(&errMsg)
+	s.Require().NoError(err, "decode web API error message")
+	s.Equal("003", errMsg.Code)
+	s.Equal("invalid post id provided", errMsg.Message)
 }
