@@ -1,4 +1,6 @@
-package e2e_test
+//go:build e2e
+
+package test_test
 
 import (
 	"database/sql"

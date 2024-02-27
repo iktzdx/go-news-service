@@ -7,7 +7,7 @@ clean_test: build_test_nocache up
 	@make -s clean
 
 test_all:
-	docker-compose -f ./build/docker-compose.yaml exec -T http go test -v ./...
+	docker-compose -f ./build/docker-compose.yaml exec -T http go test -v -tags=integration,e2e ./...
 
 build_test:
 	docker build -t service_test -q --target=test -f ./build/Dockerfile .
@@ -25,7 +25,7 @@ clean: down_nocache
 	[[ -z $$IMAGES ]] || docker rmi $$IMAGES
 
 unit_test:
-	go test -v `go list ./... | grep -v test`
+	go test -v ./...
 
 build:
 	docker build -t service ./build/Dockerfile .
