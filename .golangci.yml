@@ -31,9 +31,14 @@ linters-settings:
     locale: US
   gci:
     sections:
-      - Standard
-      - Default
-      - Prefix(host.local)
+      - standard
+      - default
+      # - blank
+      # - dot
+      # - alias
+      - prefix(host.local)
+    skip-generated: true
+    custom-order: true
   lll:
     line-length: 140
   depguard:
