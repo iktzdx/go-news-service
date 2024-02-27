@@ -1,12 +1,13 @@
 package post_test
 
 import (
-	"gonews/api"
-	"gonews/post"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
+	"host.local/gonews/api"
+	"host.local/gonews/post"
 )
 
 type FindPostByIDSuite struct {

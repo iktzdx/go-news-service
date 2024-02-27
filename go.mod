@@ -1,4 +1,4 @@
-module gonews
+module host.local/gonews
 
 go 1.21
 

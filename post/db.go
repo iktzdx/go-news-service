@@ -2,11 +2,11 @@ package post
 
 import (
 	"database/sql"
-	"gonews/api"
-
-	"github.com/pkg/errors"
 
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
+
+	"host.local/gonews/api"
 )
 
 type PGSQLSecondaryAdapter struct {

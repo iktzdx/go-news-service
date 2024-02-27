@@ -1,10 +1,11 @@
 package post
 
 import (
-	"gonews/api"
 	"strconv"
 
 	"github.com/pkg/errors"
+
+	"host.local/gonews/api"
 )
 
 type PostsBoundaryRepoPort interface {

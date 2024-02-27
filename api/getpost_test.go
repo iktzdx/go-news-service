@@ -2,7 +2,6 @@ package api_test
 
 import (
 	"encoding/json"
-	"gonews/api"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,6 +9,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
+	"host.local/gonews/api"
 )
 
 type GetPostSuite struct {

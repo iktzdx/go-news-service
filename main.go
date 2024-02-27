@@ -3,8 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"gonews/api"
-	"gonews/post"
 	"log"
 	"net/http"
 	"os"
@@ -12,10 +10,12 @@ import (
 
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/postgres"
-	"github.com/gorilla/mux"
-
 	_ "github.com/golang-migrate/migrate/source/file"
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+
+	"host.local/gonews/api"
+	"host.local/gonews/post"
 )
 
 const (

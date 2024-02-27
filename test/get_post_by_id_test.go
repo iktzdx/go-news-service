@@ -3,7 +3,6 @@ package e2e_test
 import (
 	"database/sql"
 	"encoding/json"
-	"gonews/api"
 	"io"
 	"net/http"
 	"os"
@@ -11,6 +10,8 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
+
+	"host.local/gonews/api"
 )
 
 type GetPostByIDSuite struct {

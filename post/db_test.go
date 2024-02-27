@@ -2,13 +2,14 @@ package post_test
 
 import (
 	"database/sql"
-	"gonews/api"
-	"gonews/post"
 	"os"
 	"testing"
 
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
+
+	"host.local/gonews/api"
+	"host.local/gonews/post"
 )
 
 type RepoFindPostByIDSuite struct {

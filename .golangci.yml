@@ -9,19 +9,19 @@ run:
 linters:
   enable-all: true
   disable:
-    - golint
-    - exhaustivestruct
-    - maligned
-    - interfacer
-    - scopelint
-    - ifshort
-    - varcheck
-    - structcheck
     - deadcode
+    - exhaustivestruct
+    - golint
+    - ifshort
+    - interfacer
+    - maligned
     - nosnakecase
-    - varnamelen
-    - tagalign
     - paralleltest
+    - scopelint
+    - structcheck
+    - tagalign
+    - varcheck
+    - varnamelen
 linters-settings:
   revive:
     rules:
@@ -33,7 +33,7 @@ linters-settings:
     sections:
       - Standard
       - Default
-      - Prefix(gonews)
+      - Prefix(host.local)
   lll:
     line-length: 140
   depguard:
@@ -42,6 +42,7 @@ linters-settings:
         allow:
           - $gostd
           - github.com
+          - host.local
 issues:
   exclude-rules:
     - linters:
