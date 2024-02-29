@@ -11,6 +11,10 @@ type PrimaryAdapter struct {
 	port BoundaryPort
 }
 
+func NewPrimaryAdapter(port BoundaryPort) PrimaryAdapter {
+	return PrimaryAdapter{port}
+}
+
 func (h PrimaryAdapter) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
@@ -38,8 +42,4 @@ func (h PrimaryAdapter) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WrapOK(w, post)
-}
-
-func NewPrimaryAdapter(port BoundaryPort) PrimaryAdapter {
-	return PrimaryAdapter{port}
 }
