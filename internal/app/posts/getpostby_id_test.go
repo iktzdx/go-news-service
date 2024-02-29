@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
-	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
 )
 
 type FindPostByIDSuite struct {
@@ -24,10 +25,10 @@ type MockBoundaryRepoPort struct {
 	mock.Mock
 }
 
-func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int) (rest.Post, error) {
+func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int) (models.Post, error) {
 	args := mockRepo.Called(id)
 
-	return args.Get(0).(rest.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
+	return args.Get(0).(models.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *FindPostByIDSuite) SetupTest() {
@@ -36,7 +37,7 @@ func (s *FindPostByIDSuite) SetupTest() {
 }
 
 func (s *FindPostByIDSuite) TestFinderFailed() {
-	var expected rest.Post
+	var expected models.Post
 
 	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrUnexpected)
 
@@ -46,7 +47,7 @@ func (s *FindPostByIDSuite) TestFinderFailed() {
 }
 
 func (s *FindPostByIDSuite) TestInvalidPostID() {
-	var expected rest.Post
+	var expected models.Post
 
 	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrInvalidPostID)
 
@@ -56,7 +57,7 @@ func (s *FindPostByIDSuite) TestInvalidPostID() {
 }
 
 func (s *FindPostByIDSuite) TestFinderSucceeded() {
-	expected := rest.Post{
+	expected := models.Post{
 		ID:        12345,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",

@@ -1,4 +1,4 @@
-package rest
+package models
 
 type Posts struct {
 	Posts []Post `json:"posts"`
@@ -12,23 +12,3 @@ type Post struct {
 	Content   string `json:"content"`
 	CreatedAt int    `json:"createdAt"`
 }
-
-type WebAPIError struct {
-	Code    string `json:"code"`
-	Message string `json:"msg"`
-}
-
-type (
-	SearchOpts struct {
-		FilterOpts
-		PaginationOpts
-	}
-	FilterOpts struct {
-		ID       int
-		AuthorID int
-	}
-	PaginationOpts struct {
-		Limit  int
-		Offset int
-	}
-)

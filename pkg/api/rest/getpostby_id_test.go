@@ -10,7 +10,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
+	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
 )
 
 type GetPostByIDSuite struct {
@@ -29,10 +30,10 @@ type MockBoundaryPort struct {
 	mock.Mock
 }
 
-func (m *MockBoundaryPort) GetPostByID(id string) (rest.Post, error) {
+func (m *MockBoundaryPort) GetPostByID(id string) (models.Post, error) {
 	args := m.Called(id)
 
-	return args.Get(0).(rest.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
+	return args.Get(0).(models.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *GetPostByIDSuite) SetupTest() {
@@ -48,7 +49,7 @@ func (s *GetPostByIDSuite) SetupTest() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
-	var post rest.Post
+	var post models.Post
 
 	s.port.On("GetPostByID", "12345").Return(post, rest.ErrPostNotFound)
 	s.adapter.GetPostByID(s.resp, s.req)
@@ -62,7 +63,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
-	post := rest.Post{
+	post := models.Post{
 		ID:        12345,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -86,7 +87,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
-	var post rest.Post
+	var post models.Post
 
 	s.port.On("GetPostByID", "12345").Return(post, rest.ErrInvalidPostID)
 	s.adapter.GetPostByID(s.resp, s.req)
@@ -100,7 +101,7 @@ func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostReturnsUnexpectedErr() {
-	var post rest.Post
+	var post models.Post
 
 	s.port.On("GetPostByID", "12345").Return(post, rest.ErrUnexpected)
 	s.adapter.GetPostByID(s.resp, s.req)

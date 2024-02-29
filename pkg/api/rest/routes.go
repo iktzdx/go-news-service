@@ -1,15 +1,13 @@
-package api
+package rest
 
 import (
 	"github.com/gorilla/mux"
-
-	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
-func CreateRoutes(adapter rest.PrimaryAdapter) *mux.Router {
+func CreateRoutes(adapter PrimaryAdapter) *mux.Router {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/health", rest.HealthCheck).Methods("GET")
+	r.HandleFunc("/health", HealthCheck).Methods("GET")
 
 	// r.HandleFunc("/post", adapter.Create).Methods("POST")
 	r.HandleFunc("/post/{id}", adapter.GetPostByID).Methods("GET")
@@ -17,7 +15,7 @@ func CreateRoutes(adapter rest.PrimaryAdapter) *mux.Router {
 	// r.HandleFunc("/post/{id}", adapter.Update).Methods("PUT")
 	// r.HandleFunc("/post/{id}", adapter.Delete).Methods("DELETE")
 
-	r.NotFoundHandler = r.NewRoute().HandlerFunc(rest.NotFound).GetHandler()
+	r.NotFoundHandler = r.NewRoute().HandlerFunc(NotFound).GetHandler()
 
 	return r
 }

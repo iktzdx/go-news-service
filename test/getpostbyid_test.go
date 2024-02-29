@@ -13,7 +13,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
 )
 
 type GetPostByIDSuite struct {

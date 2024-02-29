@@ -3,6 +3,8 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
 )
 
 func WrapErrorWithStatus(w http.ResponseWriter, errMsg WebAPIError, status int) {
@@ -17,7 +19,7 @@ func WrapErrorWithStatus(w http.ResponseWriter, errMsg WebAPIError, status int) 
 	}
 }
 
-func WrapOK(w http.ResponseWriter, post Post) {
+func WrapOK(w http.ResponseWriter, post models.Post) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 

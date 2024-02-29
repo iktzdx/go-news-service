@@ -5,13 +5,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	"github.com/iktzdx/skillfactory-gonews/pkg/api"
 )
 
 type PrimaryAdapter struct {
-	port BoundaryPort
+	port api.BoundaryPort
 }
 
-func NewPrimaryAdapter(port BoundaryPort) PrimaryAdapter {
+func NewPrimaryAdapter(port api.BoundaryPort) PrimaryAdapter {
 	return PrimaryAdapter{port}
 }
 

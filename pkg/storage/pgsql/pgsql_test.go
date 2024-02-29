@@ -10,7 +10,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
+	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
@@ -53,7 +54,7 @@ func (s *FindPostByIDSuite) TestFindPostThatDoesExist() {
 	got, err := s.adapter.FindPostByID(42069)
 	s.Require().NoError(err)
 
-	expected := rest.Post{
+	expected := models.Post{
 		ID:        42069,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",

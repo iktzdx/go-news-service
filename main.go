@@ -12,9 +12,8 @@ import (
 	_ "github.com/golang-migrate/migrate/source/file"
 	_ "github.com/lib/pq"
 
-	"github.com/iktzdx/skillfactory-gonews/api"
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
-	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
@@ -50,7 +49,7 @@ func main() {
 	boundaryPort := posts.NewBoundaryPort(repo)
 	postsHandler := rest.NewPrimaryAdapter(boundaryPort)
 
-	routes := api.CreateRoutes(postsHandler)
+	routes := rest.CreateRoutes(postsHandler)
 
 	s := http.Server{ //nolint:exhaustruct
 		Addr:         ":8080",
