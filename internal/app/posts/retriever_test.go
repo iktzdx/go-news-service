@@ -1,4 +1,4 @@
-package post_test
+package posts_test
 
 import (
 	"testing"
@@ -6,14 +6,14 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"host.local/gonews/api"
-	"host.local/gonews/post"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
 type FindPostByIDSuite struct {
 	suite.Suite
 	mockRepo *MockPostsBoundaryRepoPort
-	port     post.PostsBoundaryPort
+	port     posts.BoundaryPort
 }
 
 func TestFindPostByIDSuite(t *testing.T) {
@@ -24,39 +24,39 @@ type MockPostsBoundaryRepoPort struct {
 	mock.Mock
 }
 
-func (mockRepo *MockPostsBoundaryRepoPort) FindPostByID(id int) (api.Post, error) {
+func (mockRepo *MockPostsBoundaryRepoPort) FindPostByID(id int) (rest.Post, error) {
 	args := mockRepo.Called(id)
 
-	return args.Get(0).(api.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
+	return args.Get(0).(rest.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *FindPostByIDSuite) SetupTest() {
 	s.mockRepo = new(MockPostsBoundaryRepoPort)
-	s.port = post.NewPostsBoundaryPort(s.mockRepo)
+	s.port = posts.NewBoundaryPort(s.mockRepo)
 }
 
 func (s *FindPostByIDSuite) TestFinderFailed() {
-	var expected api.Post
+	var expected rest.Post
 
-	s.mockRepo.On("FindPostByID", 12345).Return(expected, api.ErrUnexpected)
+	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrUnexpected)
 
 	got, err := s.port.GetPost("12345")
-	s.Require().ErrorIs(err, api.ErrUnexpected)
+	s.Require().ErrorIs(err, rest.ErrUnexpected)
 	s.Equal(expected, got)
 }
 
 func (s *FindPostByIDSuite) TestInvalidPostID() {
-	var expected api.Post
+	var expected rest.Post
 
-	s.mockRepo.On("FindPostByID", 12345).Return(expected, api.ErrInvalidPostID)
+	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrInvalidPostID)
 
 	got, err := s.port.GetPost("12C45")
-	s.Require().ErrorIs(err, api.ErrInvalidPostID)
+	s.Require().ErrorIs(err, rest.ErrInvalidPostID)
 	s.Equal(expected, got)
 }
 
 func (s *FindPostByIDSuite) TestFinderSucceeded() {
-	expected := api.Post{
+	expected := rest.Post{
 		ID:        12345,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",

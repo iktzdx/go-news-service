@@ -1,4 +1,4 @@
-package post
+package posts
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 
-	"host.local/gonews/api"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
 type PGSQLSecondaryAdapter struct {
@@ -17,18 +17,18 @@ func NewPGSQLSecondaryAdapter(db *sql.DB) PGSQLSecondaryAdapter {
 	return PGSQLSecondaryAdapter{db}
 }
 
-func (adapter PGSQLSecondaryAdapter) FindPostByID(id int) (api.Post, error) {
-	var post api.Post
+func (adapter PGSQLSecondaryAdapter) FindPostByID(id int) (rest.Post, error) {
+	var post rest.Post
 
 	query := "SELECT * FROM posts WHERE id = $1"
 	row := adapter.db.QueryRow(query, id)
 
 	if err := row.Scan(&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.CreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return api.Post{}, api.ErrPostNotFound
+			return rest.Post{}, rest.ErrPostNotFound
 		}
 
-		return api.Post{}, api.ErrUnexpected
+		return rest.Post{}, rest.ErrUnexpected
 	}
 
 	return post, nil

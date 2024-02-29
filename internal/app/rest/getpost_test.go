@@ -1,4 +1,4 @@
-package api_test
+package rest_test
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"host.local/gonews/api"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
 type GetPostSuite struct {
@@ -18,7 +18,7 @@ type GetPostSuite struct {
 	req     *http.Request
 	resp    *httptest.ResponseRecorder
 	port    *MockPostsBoundaryPort
-	adapter api.RESTPrimaryAdapter
+	adapter rest.PrimaryAdapter
 }
 
 func TestGetPostSuite(t *testing.T) {
@@ -29,10 +29,10 @@ type MockPostsBoundaryPort struct {
 	mock.Mock
 }
 
-func (m *MockPostsBoundaryPort) GetPost(id string) (api.Post, error) {
+func (m *MockPostsBoundaryPort) GetPost(id string) (rest.Post, error) {
 	args := m.Called(id)
 
-	return args.Get(0).(api.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
+	return args.Get(0).(rest.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *GetPostSuite) SetupTest() {
@@ -44,17 +44,17 @@ func (s *GetPostSuite) SetupTest() {
 	s.resp = httptest.NewRecorder()
 
 	s.port = new(MockPostsBoundaryPort)
-	s.adapter = api.NewRESTPrimaryAdapter(s.port)
+	s.adapter = rest.NewPrimaryAdapter(s.port)
 }
 
 func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
-	var post api.Post
+	var post rest.Post
 
-	s.port.On("GetPost", "12345").Return(post, api.ErrPostNotFound)
+	s.port.On("GetPost", "12345").Return(post, rest.ErrPostNotFound)
 	s.adapter.ServeHTTP(s.resp, s.req)
 	s.Equal(http.StatusNotFound, s.resp.Code)
 
-	var errMsg api.WebAPIError
+	var errMsg rest.WebAPIError
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("001", errMsg.Code)
@@ -62,7 +62,7 @@ func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
 }
 
 func (s *GetPostSuite) TestGetPostThatDoesExist() {
-	post := api.Post{
+	post := rest.Post{
 		ID:        12345,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -86,13 +86,13 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
 }
 
 func (s *GetPostSuite) TestGetPostWithInvalidID() {
-	var post api.Post
+	var post rest.Post
 
-	s.port.On("GetPost", "12345").Return(post, api.ErrInvalidPostID)
+	s.port.On("GetPost", "12345").Return(post, rest.ErrInvalidPostID)
 	s.adapter.ServeHTTP(s.resp, s.req)
 	s.Equal(http.StatusBadRequest, s.resp.Code)
 
-	var errMsg api.WebAPIError
+	var errMsg rest.WebAPIError
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("003", errMsg.Code)
@@ -100,13 +100,13 @@ func (s *GetPostSuite) TestGetPostWithInvalidID() {
 }
 
 func (s *GetPostSuite) TestGetPostReturnsUnexpectedErr() {
-	var post api.Post
+	var post rest.Post
 
-	s.port.On("GetPost", "12345").Return(post, api.ErrUnexpected)
+	s.port.On("GetPost", "12345").Return(post, rest.ErrUnexpected)
 	s.adapter.ServeHTTP(s.resp, s.req)
 	s.Equal(http.StatusInternalServerError, s.resp.Code)
 
-	var errMsg api.WebAPIError
+	var errMsg rest.WebAPIError
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("002", errMsg.Code)

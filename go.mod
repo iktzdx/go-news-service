@@ -1,4 +1,4 @@
-module host.local/gonews
+module github.com/iktzdx/skillfactory-gonews
 
 go 1.21
 

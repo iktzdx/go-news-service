@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -11,11 +10,11 @@ import (
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/postgres"
 	_ "github.com/golang-migrate/migrate/source/file"
-	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 
-	"host.local/gonews/api"
-	"host.local/gonews/post"
+	"github.com/iktzdx/skillfactory-gonews/api"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
 const (
@@ -23,19 +22,6 @@ const (
 	WriteTimeout   time.Duration = 5 * time.Second
 	MigrationSteps int           = 4
 )
-
-type healthCheckResponse struct {
-	Status  string   `json:"status"`
-	Message []string `json:"msg"`
-}
-
-type Post struct {
-	ID        int    `json:"id"`
-	AuthorID  int    `json:"authorId"`
-	Title     string `json:"title"`
-	Content   string `json:"content"`
-	CreatedAt int    `json:"createdAt"`
-}
 
 func main() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
@@ -59,37 +45,15 @@ func main() {
 		log.Fatalf("migrate up: %s", err.Error())
 	}
 
-	r := mux.NewRouter()
+	repo := posts.NewPGSQLSecondaryAdapter(db)
+	boundaryPort := posts.NewBoundaryPort(repo)
+	postsHandler := rest.NewPrimaryAdapter(boundaryPort)
 
-	repo := post.NewPGSQLSecondaryAdapter(db)
-	boundaryPort := post.NewPostsBoundaryPort(repo)
-
-	r.Handle("/post/{id}", api.NewRESTPrimaryAdapter(boundaryPort))
-
-	r.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		resp, err := json.Marshal(healthCheckResponse{
-			Status:  "OK",
-			Message: []string{},
-		})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		if _, err = w.Write(resp); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-	})
+	routes := api.CreateRoutes(postsHandler)
 
 	s := http.Server{ //nolint:exhaustruct
 		Addr:         ":8080",
-		Handler:      r,
+		Handler:      routes,
 		ReadTimeout:  ReadTimeout,
 		WriteTimeout: WriteTimeout,
 	}

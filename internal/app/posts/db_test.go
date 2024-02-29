@@ -1,6 +1,6 @@
 //go:build integration
 
-package post_test
+package posts_test
 
 import (
 	"database/sql"
@@ -10,14 +10,14 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 
-	"host.local/gonews/api"
-	"host.local/gonews/post"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
 type RepoFindPostByIDSuite struct {
 	suite.Suite
 	db      *sql.DB
-	adapter post.PGSQLSecondaryAdapter
+	adapter posts.PGSQLSecondaryAdapter
 }
 
 func TestRepoFindPostByIDSuite(t *testing.T) {
@@ -29,7 +29,7 @@ func (s *RepoFindPostByIDSuite) SetupTest() {
 	s.Require().NoError(err, "open database connection")
 
 	s.db = db
-	s.adapter = post.NewPGSQLSecondaryAdapter(db)
+	s.adapter = posts.NewPGSQLSecondaryAdapter(db)
 }
 
 func (s *RepoFindPostByIDSuite) TearDownTest() {
@@ -39,7 +39,7 @@ func (s *RepoFindPostByIDSuite) TearDownTest() {
 
 func (s *RepoFindPostByIDSuite) TestFindPostThatDoesNotExist() {
 	got, err := s.adapter.FindPostByID(12345)
-	s.Require().ErrorIs(err, api.ErrPostNotFound)
+	s.Require().ErrorIs(err, rest.ErrPostNotFound)
 	s.Zero(got)
 }
 
@@ -53,7 +53,7 @@ func (s *RepoFindPostByIDSuite) TestFindPostThatDoesExist() {
 	got, err := s.adapter.FindPostByID(42069)
 	s.Require().NoError(err)
 
-	expected := api.Post{
+	expected := rest.Post{
 		ID:        42069,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -68,6 +68,6 @@ func (s *RepoFindPostByIDSuite) TestFindPostUnexpectedError() {
 	s.db.Close()
 
 	got, err := s.adapter.FindPostByID(12345)
-	s.Require().ErrorIs(err, api.ErrUnexpected)
+	s.Require().ErrorIs(err, rest.ErrUnexpected)
 	s.Zero(got)
 }
