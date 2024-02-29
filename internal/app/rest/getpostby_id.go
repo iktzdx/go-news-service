@@ -8,13 +8,13 @@ import (
 )
 
 type PrimaryAdapter struct {
-	port PostsBoundaryPort
+	port BoundaryPort
 }
 
-func (h PrimaryAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h PrimaryAdapter) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
-	post, err := h.port.GetPost(postID)
+	post, err := h.port.GetPostByID(postID)
 	if err != nil {
 		var status int
 
@@ -40,6 +40,6 @@ func (h PrimaryAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	WrapOK(w, post)
 }
 
-func NewPrimaryAdapter(port PostsBoundaryPort) PrimaryAdapter {
+func NewPrimaryAdapter(port BoundaryPort) PrimaryAdapter {
 	return PrimaryAdapter{port}
 }

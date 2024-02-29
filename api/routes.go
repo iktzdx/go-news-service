@@ -11,10 +11,11 @@ func CreateRoutes(adapter rest.PrimaryAdapter) *mux.Router {
 
 	r.HandleFunc("/health", rest.HealthCheck).Methods("GET")
 
-	r.HandleFunc("/post/{id}", adapter.ServeHTTP).Methods("GET")
-
-	// r.HandleFunc("/users/create", usersHandler.Create).Methods("POST")
-	// r.HandleFunc("/users/list", usersHandler.List).Methods("GET")
+	// r.HandleFunc("/post", adapter.Create).Methods("POST")
+	r.HandleFunc("/post/{id}", adapter.GetPostByID).Methods("GET")
+	// r.HandleFunc("/posts", adapter.List).Methods("GET")
+	// r.HandleFunc("/post/{id}", adapter.Update).Methods("PUT")
+	// r.HandleFunc("/post/{id}", adapter.Delete).Methods("DELETE")
 
 	r.NotFoundHandler = r.NewRoute().HandlerFunc(rest.NotFound).GetHandler()
 

@@ -13,29 +13,29 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
-type GetPostSuite struct {
+type GetPostByIDSuite struct {
 	suite.Suite
 	req     *http.Request
 	resp    *httptest.ResponseRecorder
-	port    *MockPostsBoundaryPort
+	port    *MockBoundaryPort
 	adapter rest.PrimaryAdapter
 }
 
-func TestGetPostSuite(t *testing.T) {
-	suite.Run(t, new(GetPostSuite))
+func TestGetPostByIDSuite(t *testing.T) {
+	suite.Run(t, new(GetPostByIDSuite))
 }
 
-type MockPostsBoundaryPort struct {
+type MockBoundaryPort struct {
 	mock.Mock
 }
 
-func (m *MockPostsBoundaryPort) GetPost(id string) (rest.Post, error) {
+func (m *MockBoundaryPort) GetPostByID(id string) (rest.Post, error) {
 	args := m.Called(id)
 
 	return args.Get(0).(rest.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
-func (s *GetPostSuite) SetupTest() {
+func (s *GetPostByIDSuite) SetupTest() {
 	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil) //nolint:noctx
 	s.Require().NoError(err, "make new get request")
 
@@ -43,15 +43,15 @@ func (s *GetPostSuite) SetupTest() {
 
 	s.resp = httptest.NewRecorder()
 
-	s.port = new(MockPostsBoundaryPort)
+	s.port = new(MockBoundaryPort)
 	s.adapter = rest.NewPrimaryAdapter(s.port)
 }
 
-func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
+func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
 	var post rest.Post
 
-	s.port.On("GetPost", "12345").Return(post, rest.ErrPostNotFound)
-	s.adapter.ServeHTTP(s.resp, s.req)
+	s.port.On("GetPostByID", "12345").Return(post, rest.ErrPostNotFound)
+	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusNotFound, s.resp.Code)
 
 	var errMsg rest.WebAPIError
@@ -61,7 +61,7 @@ func (s *GetPostSuite) TestGetPostThatDoesNotExist() {
 	s.Equal("no post with id 12345", errMsg.Message)
 }
 
-func (s *GetPostSuite) TestGetPostThatDoesExist() {
+func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
 	post := rest.Post{
 		ID:        12345,
 		AuthorID:  0,
@@ -70,8 +70,8 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
 		CreatedAt: 0,
 	}
 
-	s.port.On("GetPost", "12345").Return(post, nil)
-	s.adapter.ServeHTTP(s.resp, s.req)
+	s.port.On("GetPostByID", "12345").Return(post, nil)
+	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusOK, s.resp.Code)
 
 	expectedBody := `{
@@ -85,11 +85,11 @@ func (s *GetPostSuite) TestGetPostThatDoesExist() {
 	s.JSONEq(expectedBody, s.resp.Body.String())
 }
 
-func (s *GetPostSuite) TestGetPostWithInvalidID() {
+func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 	var post rest.Post
 
-	s.port.On("GetPost", "12345").Return(post, rest.ErrInvalidPostID)
-	s.adapter.ServeHTTP(s.resp, s.req)
+	s.port.On("GetPostByID", "12345").Return(post, rest.ErrInvalidPostID)
+	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusBadRequest, s.resp.Code)
 
 	var errMsg rest.WebAPIError
@@ -99,11 +99,11 @@ func (s *GetPostSuite) TestGetPostWithInvalidID() {
 	s.Equal("invalid post id provided", errMsg.Message)
 }
 
-func (s *GetPostSuite) TestGetPostReturnsUnexpectedErr() {
+func (s *GetPostByIDSuite) TestGetPostReturnsUnexpectedErr() {
 	var post rest.Post
 
-	s.port.On("GetPost", "12345").Return(post, rest.ErrUnexpected)
-	s.adapter.ServeHTTP(s.resp, s.req)
+	s.port.On("GetPostByID", "12345").Return(post, rest.ErrUnexpected)
+	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusInternalServerError, s.resp.Code)
 
 	var errMsg rest.WebAPIError

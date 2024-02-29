@@ -1,6 +1,9 @@
 package rest
 
-type PostsBoundaryPort interface {
-	GetPost(id string) (Post, error)
+type BoundaryPort interface {
+	// Create(post Post) (Post, error)
+	GetPostByID(id string) (Post, error)
 	// List(opts SearchOpts) (Posts, error)
+	// Update(post Post) (Post, error)
+	// Delete(id string) error
 }

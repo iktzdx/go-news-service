@@ -12,7 +12,7 @@ import (
 
 type FindPostByIDSuite struct {
 	suite.Suite
-	mockRepo *MockPostsBoundaryRepoPort
+	mockRepo *MockBoundaryRepoPort
 	port     posts.BoundaryPort
 }
 
@@ -20,18 +20,18 @@ func TestFindPostByIDSuite(t *testing.T) {
 	suite.Run(t, new(FindPostByIDSuite))
 }
 
-type MockPostsBoundaryRepoPort struct {
+type MockBoundaryRepoPort struct {
 	mock.Mock
 }
 
-func (mockRepo *MockPostsBoundaryRepoPort) FindPostByID(id int) (rest.Post, error) {
+func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int) (rest.Post, error) {
 	args := mockRepo.Called(id)
 
 	return args.Get(0).(rest.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *FindPostByIDSuite) SetupTest() {
-	s.mockRepo = new(MockPostsBoundaryRepoPort)
+	s.mockRepo = new(MockBoundaryRepoPort)
 	s.port = posts.NewBoundaryPort(s.mockRepo)
 }
 
@@ -40,7 +40,7 @@ func (s *FindPostByIDSuite) TestFinderFailed() {
 
 	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrUnexpected)
 
-	got, err := s.port.GetPost("12345")
+	got, err := s.port.GetPostByID("12345")
 	s.Require().ErrorIs(err, rest.ErrUnexpected)
 	s.Equal(expected, got)
 }
@@ -50,7 +50,7 @@ func (s *FindPostByIDSuite) TestInvalidPostID() {
 
 	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrInvalidPostID)
 
-	got, err := s.port.GetPost("12C45")
+	got, err := s.port.GetPostByID("12C45")
 	s.Require().ErrorIs(err, rest.ErrInvalidPostID)
 	s.Equal(expected, got)
 }
@@ -66,7 +66,7 @@ func (s *FindPostByIDSuite) TestFinderSucceeded() {
 
 	s.mockRepo.On("FindPostByID", 12345).Return(expected, nil)
 
-	got, err := s.port.GetPost("12345")
+	got, err := s.port.GetPostByID("12345")
 	s.Require().NoError(err)
 	s.Equal(expected, got)
 }

@@ -33,10 +33,7 @@ linters-settings:
     sections:
       - standard
       - default
-      # - blank
-      # - dot
-      # - alias
-      - prefix(host.local)
+      - prefix(github.com/iktzdx)
     skip-generated: true
     custom-order: true
   lll:
@@ -47,7 +44,6 @@ linters-settings:
         allow:
           - $gostd
           - github.com
-          - host.local
 issues:
   exclude-rules:
     - linters:

@@ -15,6 +15,7 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/api"
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
 	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
 const (
@@ -45,7 +46,7 @@ func main() {
 		log.Fatalf("migrate up: %s", err.Error())
 	}
 
-	repo := posts.NewPGSQLSecondaryAdapter(db)
+	repo := pgsql.NewSecondaryAdapter(db)
 	boundaryPort := posts.NewBoundaryPort(repo)
 	postsHandler := rest.NewPrimaryAdapter(boundaryPort)
 

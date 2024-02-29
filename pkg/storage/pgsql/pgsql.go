@@ -1,4 +1,4 @@
-package posts
+package pgsql
 
 import (
 	"database/sql"
@@ -9,15 +9,15 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
 )
 
-type PGSQLSecondaryAdapter struct {
+type SecondaryAdapter struct {
 	db *sql.DB
 }
 
-func NewPGSQLSecondaryAdapter(db *sql.DB) PGSQLSecondaryAdapter {
-	return PGSQLSecondaryAdapter{db}
+func NewSecondaryAdapter(db *sql.DB) SecondaryAdapter {
+	return SecondaryAdapter{db}
 }
 
-func (adapter PGSQLSecondaryAdapter) FindPostByID(id int) (rest.Post, error) {
+func (adapter SecondaryAdapter) FindPostByID(id int) (rest.Post, error) {
 	var post rest.Post
 
 	query := "SELECT * FROM posts WHERE id = $1"

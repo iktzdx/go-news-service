@@ -1,6 +1,6 @@
 //go:build integration
 
-package posts_test
+package pgsql_test
 
 import (
 	"database/sql"
@@ -10,40 +10,40 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
 	"github.com/iktzdx/skillfactory-gonews/internal/app/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
-type RepoFindPostByIDSuite struct {
+type FindPostByIDSuite struct {
 	suite.Suite
 	db      *sql.DB
-	adapter posts.PGSQLSecondaryAdapter
+	adapter pgsql.SecondaryAdapter
 }
 
-func TestRepoFindPostByIDSuite(t *testing.T) {
-	suite.Run(t, new(RepoFindPostByIDSuite))
+func TestFindPostByIDSuite(t *testing.T) {
+	suite.Run(t, new(FindPostByIDSuite))
 }
 
-func (s *RepoFindPostByIDSuite) SetupTest() {
+func (s *FindPostByIDSuite) SetupTest() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	s.Require().NoError(err, "open database connection")
 
 	s.db = db
-	s.adapter = posts.NewPGSQLSecondaryAdapter(db)
+	s.adapter = pgsql.NewSecondaryAdapter(db)
 }
 
-func (s *RepoFindPostByIDSuite) TearDownTest() {
+func (s *FindPostByIDSuite) TearDownTest() {
 	err := s.db.Close()
 	s.Require().NoError(err, "close db connection")
 }
 
-func (s *RepoFindPostByIDSuite) TestFindPostThatDoesNotExist() {
+func (s *FindPostByIDSuite) TestFindPostThatDoesNotExist() {
 	got, err := s.adapter.FindPostByID(12345)
 	s.Require().ErrorIs(err, rest.ErrPostNotFound)
 	s.Zero(got)
 }
 
-func (s *RepoFindPostByIDSuite) TestFindPostThatDoesExist() {
+func (s *FindPostByIDSuite) TestFindPostThatDoesExist() {
 	_, err := s.db.Exec(
 		"INSERT INTO posts (id, author_id, title, content, created_at) VALUES ($1, $2, $3, $4, $5)",
 		42069, 0, "The Future of Sustainable Energy", "The global pursuit of renewable energy sources continues to gain momentum.", 0,
@@ -64,7 +64,7 @@ func (s *RepoFindPostByIDSuite) TestFindPostThatDoesExist() {
 	s.Equal(expected, got)
 }
 
-func (s *RepoFindPostByIDSuite) TestFindPostUnexpectedError() {
+func (s *FindPostByIDSuite) TestFindPostUnexpectedError() {
 	s.db.Close()
 
 	got, err := s.adapter.FindPostByID(12345)
