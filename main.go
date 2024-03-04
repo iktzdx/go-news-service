@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("create postgresql driver: %s", err.Error())
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations/postgresql", "postgres", pgDriver)
+	m, err := migrate.NewWithDatabaseInstance("file://migrations/pgsql", "postgres", pgDriver)
 	if err != nil {
 		log.Fatalf("make migrations engine: %s", err.Error())
 	}
