@@ -10,8 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
-	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
@@ -40,7 +39,7 @@ func (s *FindPostByIDSuite) TearDownTest() {
 
 func (s *FindPostByIDSuite) TestFindPostThatDoesNotExist() {
 	got, err := s.adapter.FindPostByID(12345)
-	s.Require().ErrorIs(err, rest.ErrPostNotFound)
+	s.Require().ErrorIs(err, storage.ErrNoDataFound)
 	s.Zero(got)
 }
 
@@ -54,7 +53,7 @@ func (s *FindPostByIDSuite) TestFindPostThatDoesExist() {
 	got, err := s.adapter.FindPostByID(42069)
 	s.Require().NoError(err)
 
-	expected := models.Post{
+	want := storage.Data{
 		ID:        42069,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -62,13 +61,13 @@ func (s *FindPostByIDSuite) TestFindPostThatDoesExist() {
 		CreatedAt: 0,
 	}
 
-	s.Equal(expected, got)
+	s.Equal(want, got)
 }
 
 func (s *FindPostByIDSuite) TestFindPostUnexpectedError() {
 	s.db.Close()
 
 	got, err := s.adapter.FindPostByID(12345)
-	s.Require().ErrorIs(err, rest.ErrUnexpected)
+	s.Require().ErrorIs(err, storage.ErrUnexpected)
 	s.Zero(got)
 }

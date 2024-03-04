@@ -6,9 +6,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
-	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
 )
 
 type FindPostByIDSuite struct {
@@ -25,10 +24,10 @@ type MockBoundaryRepoPort struct {
 	mock.Mock
 }
 
-func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int) (models.Post, error) {
+func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int) (storage.Data, error) {
 	args := mockRepo.Called(id)
 
-	return args.Get(0).(models.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
+	return args.Get(0).(storage.Data), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *FindPostByIDSuite) SetupTest() {
@@ -37,27 +36,27 @@ func (s *FindPostByIDSuite) SetupTest() {
 }
 
 func (s *FindPostByIDSuite) TestFinderFailed() {
-	var expected models.Post
+	var expected storage.Data
 
-	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrUnexpected)
+	s.mockRepo.On("FindPostByID", 12345).Return(expected, storage.ErrUnexpected)
 
+	want := posts.FromRepo(expected)
 	got, err := s.port.GetPostByID("12345")
-	s.Require().ErrorIs(err, rest.ErrUnexpected)
-	s.Equal(expected, got)
+
+	s.Require().ErrorIs(err, storage.ErrUnexpected)
+	s.Equal(want, got)
 }
 
 func (s *FindPostByIDSuite) TestInvalidPostID() {
-	var expected models.Post
-
-	s.mockRepo.On("FindPostByID", 12345).Return(expected, rest.ErrInvalidPostID)
-
+	want := posts.Post{} //nolint:exhaustruct
 	got, err := s.port.GetPostByID("12C45")
-	s.Require().ErrorIs(err, rest.ErrInvalidPostID)
-	s.Equal(expected, got)
+
+	s.Require().ErrorIs(err, posts.ErrInvalidPostID)
+	s.Equal(want, got)
 }
 
 func (s *FindPostByIDSuite) TestFinderSucceeded() {
-	expected := models.Post{
+	expected := storage.Data{
 		ID:        12345,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -67,7 +66,9 @@ func (s *FindPostByIDSuite) TestFinderSucceeded() {
 
 	s.mockRepo.On("FindPostByID", 12345).Return(expected, nil)
 
+	want := posts.FromRepo(expected)
 	got, err := s.port.GetPostByID("12345")
+
 	s.Require().NoError(err)
-	s.Equal(expected, got)
+	s.Equal(want, got)
 }

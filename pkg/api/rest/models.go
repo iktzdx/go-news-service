@@ -1,21 +1,25 @@
 package rest
 
-type WebAPIError struct {
-	Code    string `json:"code"`
-	Message string `json:"msg"`
-}
-
 type (
-	SearchOpts struct {
-		FilterOpts
-		PaginationOpts
+	GetPostByIDResponse struct {
+		Payload
 	}
-	FilterOpts struct {
-		ID       int
-		AuthorID int
+
+	ListResponse struct {
+		Posts []Payload `json:"posts"`
+		Total int       `json:"total"`
 	}
-	PaginationOpts struct {
-		Limit  int
-		Offset int
+
+	WebAPIErrorResponse struct {
+		Code    string `json:"code"`
+		Message string `json:"msg"`
 	}
 )
+
+type Payload struct {
+	ID        int    `json:"id"`
+	AuthorID  int    `json:"authorId"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	CreatedAt int    `json:"createdAt"`
+}

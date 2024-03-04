@@ -5,8 +5,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
-	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
 )
 
@@ -18,16 +16,26 @@ func NewBoundaryPort(repo storage.BoundaryRepoPort) BoundaryPort {
 	return BoundaryPort{repo}
 }
 
-func (port BoundaryPort) GetPostByID(id string) (models.Post, error) {
+func (port BoundaryPort) GetPostByID(id string) (Post, error) {
 	postID, err := strconv.Atoi(id)
 	if err != nil {
-		return models.Post{}, errors.Wrap(rest.ErrInvalidPostID, "parse int")
+		return Post{}, errors.Wrap(ErrInvalidPostID, "parse int")
 	}
 
-	post, err := port.repo.FindPostByID(postID)
+	data, err := port.repo.FindPostByID(postID)
 	if err != nil {
-		return models.Post{}, errors.Wrap(err, "get post")
+		return Post{}, errors.Wrap(err, "get post")
 	}
 
-	return post, nil
+	return FromRepo(data), nil
+}
+
+func FromRepo(data storage.Data) Post {
+	return Post{
+		ID:        data.ID,
+		AuthorID:  data.AuthorID,
+		Title:     data.Title,
+		Content:   data.Content,
+		CreatedAt: data.CreatedAt,
+	}
 }

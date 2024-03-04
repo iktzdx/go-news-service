@@ -1,12 +1,15 @@
 package rest
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
+	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
 	"github.com/iktzdx/skillfactory-gonews/pkg/api"
+	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
 )
 
 type PrimaryAdapter struct {
@@ -24,18 +27,18 @@ func (h PrimaryAdapter) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var status int
 
-		var errMsg WebAPIError
+		var errMsg WebAPIErrorResponse
 
 		switch {
-		case errors.Is(err, ErrPostNotFound):
+		case errors.Is(err, storage.ErrNoDataFound):
 			status = http.StatusNotFound
-			errMsg = WebAPIError{Code: "001", Message: "no post with id " + postID}
-		case errors.Is(err, ErrInvalidPostID):
+			errMsg = WebAPIErrorResponse{Code: "001", Message: "no post with id " + postID}
+		case errors.Is(err, posts.ErrInvalidPostID):
 			status = http.StatusBadRequest
-			errMsg = WebAPIError{Code: "003", Message: "invalid post id provided"}
+			errMsg = WebAPIErrorResponse{Code: "003", Message: "invalid post id provided"}
 		default:
 			status = http.StatusInternalServerError
-			errMsg = WebAPIError{"002", "unexpected error attempting to get post"}
+			errMsg = WebAPIErrorResponse{"002", "unexpected error attempting to get post"}
 		}
 
 		WrapErrorWithStatus(w, errMsg, status)
@@ -43,5 +46,22 @@ func (h PrimaryAdapter) GetPostByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WrapOK(w, post)
+	resp := GetPostByIDResponse{
+		Payload: Payload{
+			ID:        post.ID,
+			AuthorID:  post.AuthorID,
+			Title:     post.Title,
+			Content:   post.Content,
+			CreatedAt: post.CreatedAt,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
 }

@@ -10,8 +10,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/iktzdx/skillfactory-gonews/internal/app/models"
+	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
 	"github.com/iktzdx/skillfactory-gonews/pkg/api/rest"
+	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
 )
 
 type GetPostByIDSuite struct {
@@ -30,10 +31,10 @@ type MockBoundaryPort struct {
 	mock.Mock
 }
 
-func (m *MockBoundaryPort) GetPostByID(id string) (models.Post, error) {
+func (m *MockBoundaryPort) GetPostByID(id string) (posts.Post, error) {
 	args := m.Called(id)
 
-	return args.Get(0).(models.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
+	return args.Get(0).(posts.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *GetPostByIDSuite) SetupTest() {
@@ -49,13 +50,13 @@ func (s *GetPostByIDSuite) SetupTest() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
-	var post models.Post
+	var post posts.Post
 
-	s.port.On("GetPostByID", "12345").Return(post, rest.ErrPostNotFound)
+	s.port.On("GetPostByID", "12345").Return(post, storage.ErrNoDataFound)
 	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusNotFound, s.resp.Code)
 
-	var errMsg rest.WebAPIError
+	var errMsg rest.WebAPIErrorResponse
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("001", errMsg.Code)
@@ -63,7 +64,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
-	post := models.Post{
+	post := posts.Post{
 		ID:        12345,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -87,13 +88,13 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
-	var post models.Post
+	var post posts.Post
 
-	s.port.On("GetPostByID", "12345").Return(post, rest.ErrInvalidPostID)
+	s.port.On("GetPostByID", "12345").Return(post, posts.ErrInvalidPostID)
 	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusBadRequest, s.resp.Code)
 
-	var errMsg rest.WebAPIError
+	var errMsg rest.WebAPIErrorResponse
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("003", errMsg.Code)
@@ -101,13 +102,13 @@ func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 }
 
 func (s *GetPostByIDSuite) TestGetPostReturnsUnexpectedErr() {
-	var post models.Post
+	var post posts.Post
 
-	s.port.On("GetPostByID", "12345").Return(post, rest.ErrUnexpected)
+	s.port.On("GetPostByID", "12345").Return(post, storage.ErrUnexpected)
 	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusInternalServerError, s.resp.Code)
 
-	var errMsg rest.WebAPIError
+	var errMsg rest.WebAPIErrorResponse
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("002", errMsg.Code)

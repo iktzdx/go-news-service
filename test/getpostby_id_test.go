@@ -40,7 +40,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
 
 	s.Equal(http.StatusNotFound, resp.StatusCode)
 
-	var errMsg rest.WebAPIError
+	var errMsg rest.WebAPIErrorResponse
 	err = json.NewDecoder(resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("001", errMsg.Code)
@@ -95,7 +95,7 @@ func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
-	var errMsg rest.WebAPIError
+	var errMsg rest.WebAPIErrorResponse
 	err = json.NewDecoder(resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal("003", errMsg.Code)
