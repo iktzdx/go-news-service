@@ -7,7 +7,7 @@ import (
 type BoundaryPort interface {
 	// Create(post Post) (Post, error)
 	GetPostByID(id string) (posts.Post, error)
-	// List(opts SearchOpts) (Posts, error)
+	List(params posts.QueryParams) (posts.Posts, error)
 	// Update(post Post) (Post, error)
 	// Delete(id string) error
 }

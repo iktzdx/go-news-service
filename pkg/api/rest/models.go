@@ -5,7 +5,7 @@ type (
 		Payload
 	}
 
-	ListResponse struct {
+	ListPostsResponse struct {
 		Posts []Payload `json:"posts"`
 		Total int       `json:"total"`
 	}

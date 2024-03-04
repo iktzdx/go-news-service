@@ -51,7 +51,7 @@ func (s *FindPostByIDSuite) TestInvalidPostID() {
 	want := posts.Post{} //nolint:exhaustruct
 	got, err := s.port.GetPostByID("12C45")
 
-	s.Require().ErrorIs(err, posts.ErrInvalidPostID)
+	s.Require().ErrorIs(err, posts.ErrInvalidQueryParam)
 	s.Equal(want, got)
 }
 

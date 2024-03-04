@@ -43,7 +43,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
 	var errMsg rest.WebAPIErrorResponse
 	err = json.NewDecoder(resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
-	s.Equal("001", errMsg.Code)
+	s.Equal(rest.PostNotFoundCode, errMsg.Code)
 	s.Equal("no post with id 12345", errMsg.Message)
 }
 
@@ -72,7 +72,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
 	b, err := io.ReadAll(resp.Body)
 	s.Require().NoError(err, "read response body")
 
-	expectedBody := `{
+	want := `{
         "id": 54321,
         "authorId": 0,
         "title": "The Future of Sustainable Energy",
@@ -81,7 +81,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
     }`
 
 	s.Equal(http.StatusOK, resp.StatusCode)
-	s.JSONEq(expectedBody, string(b))
+	s.JSONEq(want, string(b))
 }
 
 func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
@@ -98,6 +98,6 @@ func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 	var errMsg rest.WebAPIErrorResponse
 	err = json.NewDecoder(resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
-	s.Equal("003", errMsg.Code)
+	s.Equal(rest.BadRequestCode, errMsg.Code)
 	s.Equal("invalid post id provided", errMsg.Message)
 }

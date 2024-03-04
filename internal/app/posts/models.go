@@ -12,3 +12,20 @@ type Post struct {
 	Content   string
 	CreatedAt int
 }
+
+type (
+	QueryParams struct {
+		FiltersParams
+		PaginationParams
+	}
+
+	FiltersParams struct {
+		ID       string
+		AuthorID string
+	}
+
+	PaginationParams struct {
+		Limit  string
+		Offset string
+	}
+)

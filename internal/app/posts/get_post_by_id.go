@@ -8,18 +8,10 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
 )
 
-type BoundaryPort struct {
-	repo storage.BoundaryRepoPort
-}
-
-func NewBoundaryPort(repo storage.BoundaryRepoPort) BoundaryPort {
-	return BoundaryPort{repo}
-}
-
 func (port BoundaryPort) GetPostByID(id string) (Post, error) {
 	postID, err := strconv.Atoi(id)
 	if err != nil {
-		return Post{}, errors.Wrap(ErrInvalidPostID, "parse int")
+		return Post{}, errors.Wrap(ErrInvalidQueryParam, "parse int")
 	}
 
 	data, err := port.repo.FindPostByID(postID)

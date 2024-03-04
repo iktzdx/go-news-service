@@ -37,6 +37,12 @@ func (m *MockBoundaryPort) GetPostByID(id string) (posts.Post, error) {
 	return args.Get(0).(posts.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
+func (m *MockBoundaryPort) List(params posts.QueryParams) (posts.Posts, error) {
+	args := m.Called(params)
+
+	return args.Get(0).(posts.Posts), args.Error(1) //nolint:forcetypeassert,wrapcheck
+}
+
 func (s *GetPostByIDSuite) SetupTest() {
 	req, err := http.NewRequest(http.MethodGet, "/post/12345", nil) //nolint:noctx
 	s.Require().NoError(err, "make new get request")
@@ -59,12 +65,12 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
 	var errMsg rest.WebAPIErrorResponse
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
-	s.Equal("001", errMsg.Code)
+	s.Equal(rest.PostNotFoundCode, errMsg.Code)
 	s.Equal("no post with id 12345", errMsg.Message)
 }
 
 func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
-	post := posts.Post{
+	expected := posts.Post{
 		ID:        12345,
 		AuthorID:  0,
 		Title:     "The Future of Sustainable Energy",
@@ -72,11 +78,11 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
 		CreatedAt: 0,
 	}
 
-	s.port.On("GetPostByID", "12345").Return(post, nil)
+	s.port.On("GetPostByID", "12345").Return(expected, nil)
 	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusOK, s.resp.Code)
 
-	expectedBody := `{
+	want := `{
         "id": 12345,
         "authorId": 0,
         "title": "The Future of Sustainable Energy",
@@ -84,20 +90,20 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
         "createdAt": 0
     }`
 
-	s.JSONEq(expectedBody, s.resp.Body.String())
+	s.JSONEq(want, s.resp.Body.String())
 }
 
 func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 	var post posts.Post
 
-	s.port.On("GetPostByID", "12345").Return(post, posts.ErrInvalidPostID)
+	s.port.On("GetPostByID", "12345").Return(post, posts.ErrInvalidQueryParam)
 	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusBadRequest, s.resp.Code)
 
 	var errMsg rest.WebAPIErrorResponse
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
-	s.Equal("003", errMsg.Code)
+	s.Equal(rest.BadRequestCode, errMsg.Code)
 	s.Equal("invalid post id provided", errMsg.Message)
 }
 
@@ -111,6 +117,6 @@ func (s *GetPostByIDSuite) TestGetPostReturnsUnexpectedErr() {
 	var errMsg rest.WebAPIErrorResponse
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
-	s.Equal("002", errMsg.Code)
+	s.Equal(rest.UnexpectedCode, errMsg.Code)
 	s.Equal("unexpected error attempting to get post", errMsg.Message)
 }
