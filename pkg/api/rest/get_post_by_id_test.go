@@ -66,7 +66,7 @@ func (s *GetPostByIDSuite) TestGetPostThatDoesNotExist() {
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal(rest.PostNotFoundCode, errMsg.Code)
-	s.Equal("no post with id 12345", errMsg.Message)
+	s.Equal("no post found with id provided", errMsg.Message)
 }
 
 func (s *GetPostByIDSuite) TestGetPostThatDoesExist() {
@@ -104,7 +104,7 @@ func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal(rest.BadRequestCode, errMsg.Code)
-	s.Equal("invalid post id provided", errMsg.Message)
+	s.Equal("invalid query params provided", errMsg.Message)
 }
 
 func (s *GetPostByIDSuite) TestGetPostReturnsUnexpectedErr() {

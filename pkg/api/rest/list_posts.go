@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
 )
 
@@ -26,20 +24,7 @@ func (h PrimaryAdapter) List(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.port.List(params)
 	if err != nil {
-		var status int
-
-		var errMsg WebAPIErrorResponse
-
-		switch {
-		case errors.Is(err, posts.ErrInvalidQueryParam):
-			status = http.StatusBadRequest
-			errMsg = WebAPIErrorResponse{Code: BadRequestCode, Message: "invalid query params provided"}
-		default:
-			status = http.StatusInternalServerError
-			errMsg = WebAPIErrorResponse{Code: UnexpectedCode, Message: "unexpected error attempting to get post"}
-		}
-
-		WrapErrorWithStatus(w, errMsg, status)
+		WrapErrorWithStatus(w, err)
 
 		return
 	}
