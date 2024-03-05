@@ -1,5 +1,7 @@
 package posts
 
+import "github.com/iktzdx/skillfactory-gonews/pkg/storage"
+
 type Posts struct {
 	Posts []Post
 	Total int
@@ -29,3 +31,13 @@ type (
 		Offset string
 	}
 )
+
+func FromRepo(data storage.Data) Post {
+	return Post{
+		ID:        data.ID,
+		AuthorID:  data.AuthorID,
+		Title:     data.Title,
+		Content:   data.Content,
+		CreatedAt: data.CreatedAt,
+	}
+}

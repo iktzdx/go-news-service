@@ -3,7 +3,6 @@ package posts_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
@@ -12,7 +11,7 @@ import (
 
 type FindPostByIDSuite struct {
 	suite.Suite
-	mockRepo *MockBoundaryRepoPort
+	mockRepo *posts.MockBoundaryRepoPort
 	port     posts.BoundaryPort
 }
 
@@ -20,18 +19,8 @@ func TestFindPostByIDSuite(t *testing.T) {
 	suite.Run(t, new(FindPostByIDSuite))
 }
 
-type MockBoundaryRepoPort struct {
-	mock.Mock
-}
-
-func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int) (storage.Data, error) {
-	args := mockRepo.Called(id)
-
-	return args.Get(0).(storage.Data), args.Error(1) //nolint:forcetypeassert,wrapcheck
-}
-
 func (s *FindPostByIDSuite) SetupTest() {
-	s.mockRepo = new(MockBoundaryRepoPort)
+	s.mockRepo = new(posts.MockBoundaryRepoPort)
 	s.port = posts.NewBoundaryPort(s.mockRepo)
 }
 

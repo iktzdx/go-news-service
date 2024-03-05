@@ -2,6 +2,7 @@ package storage
 
 type BulkData struct {
 	Posts []Data
+	Total int
 }
 
 type Data struct {

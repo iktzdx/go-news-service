@@ -55,6 +55,7 @@ func (s *ListPostsSuite) TestListPostsFiltered() {
 	q := req.URL.Query()
 	q.Add("id", "0")
 	q.Add("author_id", "0")
+	q.Add("limit", "1")
 
 	req.URL.RawQuery = q.Encode()
 
