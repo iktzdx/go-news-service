@@ -41,12 +41,7 @@ func (port BoundaryPort) List(params QueryParams) (Posts, error) {
 		return Posts{}, errors.Wrap(storage.ErrUnexpected, "list posts")
 	}
 
-	posts := make([]Post, len(bulkData.Posts))
-	for idx, data := range bulkData.Posts {
-		posts[idx] = FromRepo(data)
-	}
-
-	return Posts{Posts: posts, Total: bulkData.Total}, nil
+	return FromRepoBulk(bulkData), nil
 }
 
 func mapSearchOpts(params QueryParams) (storage.SearchOpts, error) {
