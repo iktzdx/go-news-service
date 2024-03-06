@@ -1,6 +1,7 @@
 package posts_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -8,6 +9,8 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
 )
+
+var errMockUnexpected = errors.New("unexpected")
 
 type FindPostByIDSuite struct {
 	suite.Suite
@@ -27,11 +30,11 @@ func (s *FindPostByIDSuite) SetupTest() {
 func (s *FindPostByIDSuite) TestFinderFailed() {
 	var expected storage.Data
 
-	s.mockRepo.On("FindPostByID", 12345).Return(expected, storage.ErrUnexpected)
+	s.mockRepo.On("FindPostByID", 12345).Return(expected, errMockUnexpected)
 
 	got, err := s.port.GetPostByID("12345")
 
-	s.Require().ErrorIs(err, storage.ErrUnexpected)
+	s.Require().Error(err)
 	s.Zero(got)
 }
 

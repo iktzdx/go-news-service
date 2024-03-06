@@ -30,7 +30,7 @@ func (adapter SecondaryAdapter) FindPostByID(id int) (storage.Data, error) {
 			return storage.Data{}, storage.ErrNoDataFound
 		}
 
-		return storage.Data{}, storage.ErrUnexpected
+		return storage.Data{}, errors.Wrap(err, "scan query row")
 	}
 
 	return post, nil

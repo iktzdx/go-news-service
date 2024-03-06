@@ -22,12 +22,12 @@ func WrapErrorWithStatus(w http.ResponseWriter, err error) {
 	case errors.Is(err, storage.ErrNoDataFound):
 		status = http.StatusNotFound
 		errMsg = WebAPIErrorResponse{Code: PostNotFoundCode, Message: "no post found with id provided"}
-	case errors.Is(err, storage.ErrUnexpected):
-		status = http.StatusInternalServerError
-		errMsg = WebAPIErrorResponse{Code: UnexpectedCode, Message: "unexpected error attempting to get post"}
-	default:
+	case errors.Is(err, ErrNoRouteFound):
 		status = http.StatusNotFound
 		errMsg = WebAPIErrorResponse{Code: RouteNotFoundCode, Message: "no route found"}
+	default:
+		status = http.StatusInternalServerError
+		errMsg = WebAPIErrorResponse{Code: UnexpectedCode, Message: "unexpected error attempting to get post"}
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

@@ -41,11 +41,11 @@ func (s *ListPostsSuite) TestListPostsFailed() {
 		params   posts.QueryParams
 	)
 
-	s.mockRepo.On("List", opts).Return(expected, storage.ErrUnexpected)
+	s.mockRepo.On("List", opts).Return(expected, errMockUnexpected)
 
 	got, err := s.port.List(params)
 
-	s.Require().ErrorIs(err, storage.ErrUnexpected)
+	s.Require().Error(err)
 	s.Zero(got)
 }
 

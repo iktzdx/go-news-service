@@ -68,6 +68,8 @@ func (s *FindPostByIDSuite) TestFindPostUnexpectedError() {
 	s.db.Close()
 
 	got, err := s.adapter.FindPostByID(12345)
-	s.Require().ErrorIs(err, storage.ErrUnexpected)
+
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "database is closed")
 	s.Zero(got)
 }

@@ -5,5 +5,5 @@ import (
 )
 
 func NotFound(w http.ResponseWriter, r *http.Request) {
-	WrapErrorWithStatus(w, nil)
+	WrapErrorWithStatus(w, ErrNoRouteFound)
 }

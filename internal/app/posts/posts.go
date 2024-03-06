@@ -38,7 +38,7 @@ func (port BoundaryPort) List(params QueryParams) (Posts, error) {
 
 	bulkData, err := port.repo.List(opts)
 	if err != nil {
-		return Posts{}, errors.Wrap(storage.ErrUnexpected, "list posts")
+		return Posts{}, errors.Wrap(err, "list posts")
 	}
 
 	return FromRepoBulk(bulkData), nil

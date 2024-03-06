@@ -30,13 +30,7 @@ func (h PrimaryAdapter) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := GetPostByIDResponse{
-		Payload: Payload{
-			ID:        post.ID,
-			AuthorID:  post.AuthorID,
-			Title:     post.Title,
-			Content:   post.Content,
-			CreatedAt: post.CreatedAt,
-		},
+		Payload: createPayload(post),
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -63,27 +57,16 @@ func (h PrimaryAdapter) List(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	result, err := h.port.List(params)
+	list, err := h.port.List(params)
 	if err != nil {
 		WrapErrorWithStatus(w, err)
 
 		return
 	}
 
-	posts := make([]Payload, len(result.Posts))
-	for idx, post := range result.Posts {
-		posts[idx] = Payload{
-			ID:        post.ID,
-			AuthorID:  post.AuthorID,
-			Title:     post.Title,
-			Content:   post.Content,
-			CreatedAt: post.CreatedAt,
-		}
-	}
-
 	resp := ListPostsResponse{
-		Posts: posts,
-		Total: result.Total,
+		Posts: createPayloads(list),
+		Total: list.Total,
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -94,4 +77,24 @@ func (h PrimaryAdapter) List(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+}
+
+func createPayload(p posts.Post) Payload {
+	return Payload{
+		ID:        p.ID,
+		AuthorID:  p.AuthorID,
+		Title:     p.Title,
+		Content:   p.Content,
+		CreatedAt: p.CreatedAt,
+	}
+}
+
+func createPayloads(ps posts.Posts) []Payload {
+	result := make([]Payload, len(ps.Posts))
+
+	for idx, post := range ps.Posts {
+		result[idx] = createPayload(post)
+	}
+
+	return result
 }

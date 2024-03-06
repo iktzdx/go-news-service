@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/iktzdx/skillfactory-gonews/internal/app/posts"
@@ -19,28 +18,12 @@ type GetPostByIDSuite struct {
 	suite.Suite
 	req     *http.Request
 	resp    *httptest.ResponseRecorder
-	port    *MockBoundaryPort
+	port    *rest.MockBoundaryPort
 	adapter rest.PrimaryAdapter
 }
 
 func TestGetPostByIDSuite(t *testing.T) {
 	suite.Run(t, new(GetPostByIDSuite))
-}
-
-type MockBoundaryPort struct {
-	mock.Mock
-}
-
-func (m *MockBoundaryPort) GetPostByID(id string) (posts.Post, error) {
-	args := m.Called(id)
-
-	return args.Get(0).(posts.Post), args.Error(1) //nolint:forcetypeassert,wrapcheck
-}
-
-func (m *MockBoundaryPort) List(params posts.QueryParams) (posts.Posts, error) {
-	args := m.Called(params)
-
-	return args.Get(0).(posts.Posts), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
 
 func (s *GetPostByIDSuite) SetupTest() {
@@ -51,7 +34,7 @@ func (s *GetPostByIDSuite) SetupTest() {
 
 	s.resp = httptest.NewRecorder()
 
-	s.port = new(MockBoundaryPort)
+	s.port = new(rest.MockBoundaryPort)
 	s.adapter = rest.NewPrimaryAdapter(s.port)
 }
 
@@ -110,7 +93,7 @@ func (s *GetPostByIDSuite) TestGetPostWithInvalidID() {
 func (s *GetPostByIDSuite) TestGetPostReturnsUnexpectedErr() {
 	var post posts.Post
 
-	s.port.On("GetPostByID", "12345").Return(post, storage.ErrUnexpected)
+	s.port.On("GetPostByID", "12345").Return(post, posts.ErrUnexpected)
 	s.adapter.GetPostByID(s.resp, s.req)
 	s.Equal(http.StatusInternalServerError, s.resp.Code)
 
