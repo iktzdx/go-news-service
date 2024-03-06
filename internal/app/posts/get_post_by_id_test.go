@@ -29,19 +29,17 @@ func (s *FindPostByIDSuite) TestFinderFailed() {
 
 	s.mockRepo.On("FindPostByID", 12345).Return(expected, storage.ErrUnexpected)
 
-	want := posts.FromRepo(expected)
 	got, err := s.port.GetPostByID("12345")
 
 	s.Require().ErrorIs(err, storage.ErrUnexpected)
-	s.Equal(want, got)
+	s.Zero(got)
 }
 
 func (s *FindPostByIDSuite) TestInvalidPostID() {
-	want := posts.Post{} //nolint:exhaustruct
 	got, err := s.port.GetPostByID("12C45")
 
 	s.Require().ErrorIs(err, posts.ErrInvalidQueryParam)
-	s.Equal(want, got)
+	s.Zero(got)
 }
 
 func (s *FindPostByIDSuite) TestFinderSucceeded() {

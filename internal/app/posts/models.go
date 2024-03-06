@@ -41,3 +41,17 @@ func FromRepo(data storage.Data) Post {
 		CreatedAt: data.CreatedAt,
 	}
 }
+
+func FromRepoBulk(bulkData storage.BulkData) Posts {
+	total := len(bulkData.Posts)
+	posts := make([]Post, total)
+
+	for idx, data := range bulkData.Posts {
+		posts[idx] = FromRepo(data)
+	}
+
+	return Posts{
+		Posts: posts,
+		Total: total,
+	}
+}
