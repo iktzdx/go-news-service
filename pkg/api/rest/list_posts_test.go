@@ -25,7 +25,7 @@ func TestListPostsSuite(t *testing.T) {
 }
 
 func (s *ListPostsSuite) SetupTest() {
-	req, err := http.NewRequest(http.MethodGet, "/posts", nil) //nolint:noctx
+	req, err := http.NewRequest(http.MethodGet, "/posts", nil)
 	s.Require().NoError(err, "make new get request")
 
 	q := req.URL.Query()
@@ -96,10 +96,11 @@ func (s *ListPostsSuite) TestListPostsReturnsUnexpectedErr() {
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal(rest.UnexpectedCode, errMsg.Code)
-	s.Equal("unexpected error attempting to get post", errMsg.Message)
+	s.Equal("service returned unexpected error", errMsg.Message)
 }
 
 func (s *ListPostsSuite) TestListPostsTheDoExist() {
+	//nolint:exhaustruct
 	params := posts.QueryParams{
 		FiltersParams: posts.FiltersParams{
 			AuthorID: "123",

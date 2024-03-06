@@ -27,7 +27,7 @@ func WrapErrorWithStatus(w http.ResponseWriter, err error) {
 		errMsg = WebAPIErrorResponse{Code: RouteNotFoundCode, Message: "no route found"}
 	default:
 		status = http.StatusInternalServerError
-		errMsg = WebAPIErrorResponse{Code: UnexpectedCode, Message: "unexpected error attempting to get post"}
+		errMsg = WebAPIErrorResponse{Code: UnexpectedCode, Message: "service returned unexpected error"}
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

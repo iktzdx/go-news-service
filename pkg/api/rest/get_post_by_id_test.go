@@ -101,5 +101,5 @@ func (s *GetPostByIDSuite) TestGetPostReturnsUnexpectedErr() {
 	err := json.NewDecoder(s.resp.Body).Decode(&errMsg)
 	s.Require().NoError(err, "decode web API error message")
 	s.Equal(rest.UnexpectedCode, errMsg.Code)
-	s.Equal("unexpected error attempting to get post", errMsg.Message)
+	s.Equal("service returned unexpected error", errMsg.Message)
 }
