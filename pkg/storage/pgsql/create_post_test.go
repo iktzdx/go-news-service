@@ -57,3 +57,13 @@ func (s *CreatePostSuite) TestCreatePostSucceed() {
 	s.Require().NoError(err)
 	s.Equal(want, got)
 }
+
+func (s *CreatePostSuite) TestCreatePostFailed() {
+	s.db.Close()
+
+	got, err := s.adapter.Create(storage.Data{}) //nolint:exhaustruct
+
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "database is closed")
+	s.Require().EqualValues(-1, got)
+}
