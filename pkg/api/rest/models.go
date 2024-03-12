@@ -17,9 +17,9 @@ type (
 )
 
 type Payload struct {
-	ID        int    `json:"id"`
-	AuthorID  int    `json:"authorId"`
+	ID        int64  `json:"id"`
+	AuthorID  int64  `json:"authorId"`
 	Title     string `json:"title"`
 	Content   string `json:"content"`
-	CreatedAt int    `json:"createdAt"`
+	CreatedAt int64  `json:"createdAt"`
 }

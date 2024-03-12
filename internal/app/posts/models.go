@@ -8,11 +8,11 @@ type Posts struct {
 }
 
 type Post struct {
-	ID        int
-	AuthorID  int
+	ID        int64
+	AuthorID  int64
 	Title     string
 	Content   string
-	CreatedAt int
+	CreatedAt int64
 }
 
 type (

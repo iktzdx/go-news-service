@@ -17,7 +17,7 @@ func NewBoundaryPort(repo storage.BoundaryRepoPort) BoundaryPort {
 }
 
 func (port BoundaryPort) GetPostByID(id string) (Post, error) {
-	postID, err := strconv.Atoi(id)
+	postID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return Post{}, errors.Wrap(ErrInvalidQueryParam, "parse int")
 	}
@@ -48,7 +48,7 @@ func mapSearchOpts(params QueryParams) (storage.SearchOpts, error) {
 	var opts storage.SearchOpts
 
 	if params.ID != "" {
-		postID, err := strconv.Atoi(params.ID)
+		postID, err := strconv.ParseInt(params.ID, 10, 64)
 		if err != nil {
 			return opts, errors.Wrap(err, "parse post id")
 		}
@@ -57,7 +57,7 @@ func mapSearchOpts(params QueryParams) (storage.SearchOpts, error) {
 	}
 
 	if params.AuthorID != "" {
-		authorID, err := strconv.Atoi(params.AuthorID)
+		authorID, err := strconv.ParseInt(params.AuthorID, 10, 64)
 		if err != nil {
 			return opts, errors.Wrap(err, "parse author id")
 		}

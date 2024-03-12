@@ -19,7 +19,21 @@ func NewSecondaryAdapter(db *sql.DB) SecondaryAdapter {
 	return SecondaryAdapter{db}
 }
 
-func (adapter SecondaryAdapter) FindPostByID(id int) (storage.Data, error) {
+func (adapter SecondaryAdapter) Create(data storage.Data) (int64, error) {
+	query := `INSERT INTO posts (author_id, title, content, created_at)
+    VALUES($1, $2, $3, $4) RETURNING id`
+
+	var createdID int64
+
+	row := adapter.db.QueryRow(query, data.AuthorID, data.Title, data.Content, data.CreatedAt) //nolint:execinquery
+	if err := row.Scan(&createdID); err != nil {
+		return -1, errors.Wrap(err, "scan for the last inserted ID")
+	}
+
+	return createdID, nil
+}
+
+func (adapter SecondaryAdapter) FindPostByID(id int64) (storage.Data, error) {
 	var post storage.Data
 
 	query := "SELECT * FROM posts WHERE id = $1"

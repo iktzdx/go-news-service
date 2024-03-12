@@ -2,15 +2,15 @@ package storage
 
 type BulkData struct {
 	Posts []Data
-	Total int
+	Total int64
 }
 
 type Data struct {
-	ID        int
-	AuthorID  int
+	ID        int64
+	AuthorID  int64
 	Title     string
 	Content   string
-	CreatedAt int
+	CreatedAt int64
 }
 
 type (
@@ -20,8 +20,8 @@ type (
 	}
 
 	FilterOpts struct {
-		ID       int
-		AuthorID int
+		ID       int64
+		AuthorID int64
 	}
 
 	PaginationOpts struct {

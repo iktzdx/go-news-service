@@ -30,7 +30,7 @@ func (s *FindPostByIDSuite) SetupTest() {
 func (s *FindPostByIDSuite) TestFinderFailed() {
 	var expected storage.Data
 
-	s.mockRepo.On("FindPostByID", 12345).Return(expected, errMockUnexpected)
+	s.mockRepo.On("FindPostByID", int64(12345)).Return(expected, errMockUnexpected)
 
 	got, err := s.port.GetPostByID("12345")
 
@@ -54,7 +54,7 @@ func (s *FindPostByIDSuite) TestFinderSucceeded() {
 		CreatedAt: 0,
 	}
 
-	s.mockRepo.On("FindPostByID", 12345).Return(expected, nil)
+	s.mockRepo.On("FindPostByID", expected.ID).Return(expected, nil)
 
 	want := posts.FromRepo(expected)
 	got, err := s.port.GetPostByID("12345")

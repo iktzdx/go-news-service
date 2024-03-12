@@ -10,7 +10,7 @@ type MockBoundaryRepoPort struct {
 	mock.Mock
 }
 
-func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int) (storage.Data, error) {
+func (mockRepo *MockBoundaryRepoPort) FindPostByID(id int64) (storage.Data, error) {
 	args := mockRepo.Called(id)
 
 	return args.Get(0).(storage.Data), args.Error(1) //nolint:forcetypeassert,wrapcheck
@@ -20,4 +20,10 @@ func (mockRepo *MockBoundaryRepoPort) List(opts storage.SearchOpts) (storage.Bul
 	args := mockRepo.Called(opts)
 
 	return args.Get(0).(storage.BulkData), args.Error(1) //nolint:forcetypeassert,wrapcheck
+}
+
+func (mockRepo *MockBoundaryRepoPort) Create(data storage.Data) (int64, error) {
+	args := mockRepo.Called(data)
+
+	return args.Get(0).(int64), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
