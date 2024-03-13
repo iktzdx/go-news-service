@@ -83,3 +83,26 @@ func (adapter SecondaryAdapter) List(opts storage.SearchOpts) (storage.BulkData,
 
 	return bulkData, nil
 }
+
+func (adapter SecondaryAdapter) Update(change storage.Data) (int64, error) {
+	query := `
+    UPDATE posts
+    SET author_id = $2, title = $3, content = $4
+    WHERE id = $1`
+
+	row, err := adapter.db.Exec(query, change.ID, change.AuthorID, change.Title, change.Content)
+	if err != nil {
+		return -1, errors.Wrap(err, "update row")
+	}
+
+	affected, err := row.RowsAffected()
+	if err != nil {
+		return -1, errors.Wrap(err, "get rows affected amount")
+	}
+
+	if affected == 0 {
+		return -1, storage.ErrNoDataFound
+	}
+
+	return affected, nil
+}

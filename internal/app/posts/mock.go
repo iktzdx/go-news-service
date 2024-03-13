@@ -27,3 +27,9 @@ func (mockRepo *MockBoundaryRepoPort) Create(data storage.Data) (int64, error) {
 
 	return args.Get(0).(int64), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
+
+func (mockRepo *MockBoundaryRepoPort) Update(change storage.Data) (int64, error) {
+	args := mockRepo.Called(change)
+
+	return args.Get(0).(int64), args.Error(1) //nolint:forcetypeassert,wrapcheck
+}
