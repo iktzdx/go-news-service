@@ -14,17 +14,17 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
-type FindPostByIDSuite struct {
+type PQFindPostByIDSuite struct {
 	suite.Suite
 	db      *sql.DB
 	adapter pgsql.SecondaryAdapter
 }
 
-func TestFindPostByIDSuite(t *testing.T) {
-	suite.Run(t, new(FindPostByIDSuite))
+func TestPQFindPostByIDSuite(t *testing.T) {
+	suite.Run(t, new(PQFindPostByIDSuite))
 }
 
-func (s *FindPostByIDSuite) SetupTest() {
+func (s *PQFindPostByIDSuite) SetupTest() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	s.Require().NoError(err, "open database connection")
 
@@ -32,18 +32,18 @@ func (s *FindPostByIDSuite) SetupTest() {
 	s.adapter = pgsql.NewSecondaryAdapter(db)
 }
 
-func (s *FindPostByIDSuite) TearDownTest() {
+func (s *PQFindPostByIDSuite) TearDownTest() {
 	err := s.db.Close()
 	s.Require().NoError(err, "close db connection")
 }
 
-func (s *FindPostByIDSuite) TestFindPostThatDoesNotExist() {
+func (s *PQFindPostByIDSuite) TestPQFindPostThatDoesNotExist() {
 	got, err := s.adapter.FindPostByID(12345)
 	s.Require().ErrorIs(err, storage.ErrNoDataFound)
 	s.Zero(got)
 }
 
-func (s *FindPostByIDSuite) TestFindPostThatDoesExist() {
+func (s *PQFindPostByIDSuite) TestPQFindPostThatDoesExist() {
 	_, err := s.db.Exec(
 		"INSERT INTO posts (id, author_id, title, content, created_at) VALUES ($1, $2, $3, $4, $5)",
 		42069, 0, "The Future of Sustainable Energy", "The global pursuit of renewable energy sources continues to gain momentum.", 0,
@@ -64,7 +64,7 @@ func (s *FindPostByIDSuite) TestFindPostThatDoesExist() {
 	s.Equal(want, got)
 }
 
-func (s *FindPostByIDSuite) TestFindPostUnexpectedError() {
+func (s *PQFindPostByIDSuite) TestPQFindPostUnexpectedError() {
 	s.db.Close()
 
 	got, err := s.adapter.FindPostByID(12345)

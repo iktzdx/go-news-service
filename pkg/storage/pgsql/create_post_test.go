@@ -14,17 +14,17 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
-type CreatePostSuite struct {
+type PQCreatePostSuite struct {
 	suite.Suite
 	db      *sql.DB
 	adapter pgsql.SecondaryAdapter
 }
 
-func TestCreatePostSuite(t *testing.T) {
-	suite.Run(t, new(CreatePostSuite))
+func TestPQCreatePostSuite(t *testing.T) {
+	suite.Run(t, new(PQCreatePostSuite))
 }
 
-func (s *CreatePostSuite) SetupTest() {
+func (s *PQCreatePostSuite) SetupTest() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	s.Require().NoError(err, "open database connection")
 
@@ -32,12 +32,12 @@ func (s *CreatePostSuite) SetupTest() {
 	s.adapter = pgsql.NewSecondaryAdapter(db)
 }
 
-func (s *CreatePostSuite) TearDownTest() {
+func (s *PQCreatePostSuite) TearDownTest() {
 	err := s.db.Close()
 	s.Require().NoError(err, "close db connection")
 }
 
-func (s *CreatePostSuite) TestCreatePostSucceed() {
+func (s *PQCreatePostSuite) TestPQCreatePostSucceed() {
 	now := time.Now().UTC().Unix()
 
 	want := storage.Data{ //nolint:exhaustruct
@@ -58,7 +58,7 @@ func (s *CreatePostSuite) TestCreatePostSucceed() {
 	s.Equal(want, got)
 }
 
-func (s *CreatePostSuite) TestCreatePostFailed() {
+func (s *PQCreatePostSuite) TestPQCreatePostFailed() {
 	s.db.Close()
 
 	got, err := s.adapter.Create(storage.Data{}) //nolint:exhaustruct

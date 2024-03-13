@@ -14,17 +14,17 @@ import (
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage/pgsql"
 )
 
-type ListPostsSuite struct {
+type PQListPostsSuite struct {
 	suite.Suite
 	db      *sql.DB
 	adapter pgsql.SecondaryAdapter
 }
 
-func TestListPostsSuite(t *testing.T) {
-	suite.Run(t, new(ListPostsSuite))
+func TestPQListPostsSuite(t *testing.T) {
+	suite.Run(t, new(PQListPostsSuite))
 }
 
-func (s *ListPostsSuite) SetupTest() {
+func (s *PQListPostsSuite) SetupTest() {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	s.Require().NoError(err, "open database connection")
 
@@ -32,12 +32,12 @@ func (s *ListPostsSuite) SetupTest() {
 	s.adapter = pgsql.NewSecondaryAdapter(db)
 }
 
-func (s *ListPostsSuite) TearDownTest() {
+func (s *PQListPostsSuite) TearDownTest() {
 	err := s.db.Close()
 	s.Require().NoError(err, "close db connection")
 }
 
-func (s *ListPostsSuite) TestListPostsEmptyResult() {
+func (s *PQListPostsSuite) TestPQListPostsEmptyResult() {
 	opts := storage.SearchOpts{
 		FilterOpts: storage.FilterOpts{
 			ID:       12345,
@@ -55,7 +55,7 @@ func (s *ListPostsSuite) TestListPostsEmptyResult() {
 	s.Zero(got)
 }
 
-func (s *ListPostsSuite) TestListPostsThatDoExist() {
+func (s *PQListPostsSuite) TestPQListPostsThatDoExist() {
 	//nolint:exhaustruct
 	opts := storage.SearchOpts{
 		FilterOpts: storage.FilterOpts{
@@ -103,7 +103,7 @@ func (s *ListPostsSuite) TestListPostsThatDoExist() {
 	s.Equal(want, got)
 }
 
-func (s *ListPostsSuite) TestListPostsUnexpectedError() {
+func (s *PQListPostsSuite) TestPQListPostsUnexpectedError() {
 	s.db.Close()
 
 	got, err := s.adapter.List(storage.SearchOpts{}) //nolint:exhaustruct
