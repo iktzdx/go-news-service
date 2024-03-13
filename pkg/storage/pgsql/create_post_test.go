@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
@@ -65,5 +66,22 @@ func (s *PQCreatePostSuite) TestPQCreatePostFailed() {
 
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "database is closed")
+	s.Require().EqualValues(-1, got)
+}
+
+func (s *PQCreatePostSuite) TestPQCreatePostNonExistentAuthorID() {
+	now := time.Now().UTC().Unix()
+
+	data := storage.Data{ //nolint:exhaustruct
+		AuthorID:  42069,
+		Title:     "New post",
+		Content:   "This is a new post for testing.",
+		CreatedAt: now,
+	}
+
+	got, err := s.adapter.Create(data)
+
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "violates foreign key constraint \"posts_author_id_fkey\"")
 	s.Require().EqualValues(-1, got)
 }
