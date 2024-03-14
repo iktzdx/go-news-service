@@ -5,5 +5,5 @@ type BoundaryRepoPort interface {
 	FindPostByID(id int64) (Data, error)
 	List(opts SearchOpts) (BulkData, error)
 	Update(change Data) (int64, error)
-	// Delete(id string) error
+	Delete(id int64) (int64, error)
 }
