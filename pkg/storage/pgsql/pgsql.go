@@ -106,3 +106,23 @@ func (adapter SecondaryAdapter) Update(change storage.Data) (int64, error) {
 
 	return affected, nil
 }
+
+func (adapter SecondaryAdapter) Delete(id int64) (int64, error) {
+	query := `DELETE FROM posts WHERE id = $1`
+
+	row, err := adapter.db.Exec(query, id)
+	if err != nil {
+		return -1, errors.Wrap(err, "delete row")
+	}
+
+	affected, err := row.RowsAffected()
+	if err != nil {
+		return -1, errors.Wrap(err, "get rows affected amount")
+	}
+
+	if affected == 0 {
+		return -1, storage.ErrNoDataFound
+	}
+
+	return affected, nil
+}
