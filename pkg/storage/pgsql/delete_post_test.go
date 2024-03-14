@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/iktzdx/skillfactory-gonews/pkg/storage"
