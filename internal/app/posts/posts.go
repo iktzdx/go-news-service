@@ -44,6 +44,17 @@ func (port BoundaryPort) List(params QueryParams) (Posts, error) {
 	return FromRepoBulk(bulkData), nil
 }
 
+func (port BoundaryPort) Create(post Post) (int64, error) {
+	data := ToRepo(post)
+
+	createdID, err := port.repo.Create(data)
+	if err != nil {
+		return -1, errors.Wrap(err, "create post")
+	}
+
+	return createdID, nil
+}
+
 func mapSearchOpts(params QueryParams) (storage.SearchOpts, error) {
 	var opts storage.SearchOpts
 

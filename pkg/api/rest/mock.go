@@ -21,3 +21,9 @@ func (m *MockBoundaryPort) List(params posts.QueryParams) (posts.Posts, error) {
 
 	return args.Get(0).(posts.Posts), args.Error(1) //nolint:forcetypeassert,wrapcheck
 }
+
+func (m *MockBoundaryPort) Create(post posts.Post) (int64, error) {
+	args := m.Called(post)
+
+	return args.Get(0).(int64), args.Error(1) //nolint:forcetypeassert,wrapcheck
+}

@@ -55,3 +55,12 @@ func FromRepoBulk(bulkData storage.BulkData) Posts {
 		Total: total,
 	}
 }
+
+func ToRepo(post Post) storage.Data {
+	return storage.Data{
+		AuthorID:  post.ID,
+		Title:     post.Title,
+		Content:   post.Content,
+		CreatedAt: post.CreatedAt,
+	}
+}
